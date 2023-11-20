@@ -14,22 +14,23 @@ class HarveyData(Dataset):
     #transforms: Any transformations that should be performed on the image when retrieved.
     def __init__(self, dataset_dir, transforms=None):
         super(HarveyData, self).__init__()
+        self.dataset_dir = dataset_dir
         self.transforms = transforms
         
-        pre_image_paths = sorted(os.listdir(os.path.join(dataset_dir, 'pre_img')))
-        post_image_paths = sorted(os.listdir(os.path.join(dataset_dir, 'post_img')))
-        mask_paths = sorted(os.listdir(os.path.join(dataset_dir, 'post_msk')))
+        self.pre_image_paths = sorted(os.listdir(os.path.join(dataset_dir, 'pre_img')))
+        self.post_image_paths = sorted(os.listdir(os.path.join(dataset_dir, 'post_img')))
+        self.mask_paths = sorted(os.listdir(os.path.join(dataset_dir, 'post_msk')))
         
         self.pre_images = []
         self.post_images = []
         self.masks = []
         
-        self.num_images = len(pre_image_paths)
+        self.num_images = len(self.pre_image_paths)
         
         for i in range(self.num_images):
-            pre_image = Image.open(os.path.join(dataset_dir, 'pre_img', pre_image_paths[i]))
-            post_image = Image.open(os.path.join(dataset_dir, 'post_img', post_image_paths[i]))
-            mask = Image.open(os.path.join(dataset_dir, 'post_msk', mask_paths[i]))
+            pre_image = Image.open(os.path.join(dataset_dir, 'pre_img', self.pre_image_paths[i]))
+            post_image = Image.open(os.path.join(dataset_dir, 'post_img', self.post_image_paths[i]))
+            mask = Image.open(os.path.join(dataset_dir, 'post_msk', self.mask_paths[i]))
             
             self.pre_images.append(pre_image)
             self.post_images.append(post_image)
@@ -44,20 +45,36 @@ class HarveyData(Dataset):
         #Convert image to normalized tensor.
         pre_image = to_tensor(pre_image)
         post_image = to_tensor(post_image)
+        mask = to_tensor(mask)
         
         #Convert mask to tensor without normalization.
-        mask_to_tensor = transforms.Compose([transforms.PILToTensor()])
-        mask = mask_to_tensor(mask)
+        #mask_to_tensor = transforms.Compose([transforms.PILToTensor()])
+        #mask = mask_to_tensor(mask)
+            
+        #Apply transformations to images
+        if self.transforms is not None:
+            pre_image = self.transforms(pre_image)
+            post_image = self.transforms(post_image)
+            mask = self.transforms(mask)
             
         #Concatenate the pre and post disaster images together along the channel dimension.
         combined_image = torch.cat([pre_image, post_image], dim=0)
-            
-        #Apply transformations to image
-        if self.transforms is not None:
-            self.transforms(combined_image)
-            self.transforms(mask)
-
         return combined_image, mask
         
+    def get_item_no_transforms(self, idx):
+        #Get pre and post image, and the mask, for the current index.
+        pre_image = self.pre_images[idx]
+        post_image = self.post_images[idx]
+        mask = self.masks[idx]
+            
+        #Convert image to normalized tensor.
+        pre_image = to_tensor(pre_image)
+        post_image = to_tensor(post_image)
+        mask = to_tensor(mask)
+        
+        #Concatenate the pre and post disaster images together along the channel dimension.
+        combined_image = torch.cat([pre_image, post_image], dim=0)
+        return combined_image, mask
+    
     def __len__(self):
         return self.num_images
