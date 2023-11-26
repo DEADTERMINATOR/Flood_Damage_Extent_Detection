@@ -17,8 +17,11 @@ class DeepLabV3(nn.Module):
         super(DeepLabV3, self).__init__()
         self.deeplabv3_weights = torchvision.models.segmentation.DeepLabV3_ResNet50_Weights.DEFAULT
         self.resnet50_weights = models.ResNet50_Weights.DEFAULT
-        self.deeplabv3 = torchvision.models.segmentation.deeplabv3_resnet50(num_classes=num_classes, weights_backbone=self.resnet50_weights)
+        self.deeplabv3 = torchvision.models.segmentation.deeplabv3_resnet50(weights=self.deeplabv3_weights, weights_backbone=self.resnet50_weights)
         
+        self.deeplabv3.classifier[-1] = torch.nn.Conv2d(in_channels=256, out_channels=num_classes, kernel_size=1, stride=1)
+        
+        """
         # Modify the first convolutional layer of the ResNet50 backbone to accept num_input_channels channels        
         backbone_conv1 = nn.Conv2d(num_input_channels, out_channels=64, kernel_size=7, stride=2, padding=3, bias=False)
         self.modified_backbone = nn.Sequential(backbone_conv1,
@@ -26,6 +29,7 @@ class DeepLabV3(nn.Module):
         self.deeplabv3_head = nn.Sequential(*list(self.deeplabv3.children())[-1:])
         self.deeplabv3_combine = nn.Sequential(self.modified_backbone,
                                                self.deeplabv3_head)
+        """                                       
 
         #print("----------ORIGINAL----------")
         #print(nn.Sequential(*list(self.deeplabv3.children())[-2:]))
@@ -35,40 +39,84 @@ class DeepLabV3(nn.Module):
         #print(nn.Sequential(*list(self.deeplabv3.children())[-1:]))
         
     def forward(self, x):
-        #x = self.deeplabv3.forward(x)
-        x = self.deeplabv3_combine.forward(x)
+        x = self.deeplabv3.forward(x)
+        #x = self.deeplabv3_combine.forward(x)
         return x
+    
+def visualize_results(num_results, predictions, images=None, masks=None):
+    fig, axs = plt.subplots(num_results, 3, figsize=(32, 32))
 
+    predictions_flat = [item for sublist in predictions for item in sublist]
+    images_flat = [item for sublist in images for item in sublist]
+    masks_flat = [item for sublist in masks for item in sublist]
+        
+    for i in range(num_results):
+        # Plot the input image and ground truth mask
+        if (images == None or masks == None):    
+            image, mask = test_dataset.get_item_no_transforms(i)
+            
+            axs[i, 0].imshow(image.numpy()[:, :, :].T, aspect='equal')
+            axs[i, 2].imshow(mask.numpy()[0].T, cmap="viridis", aspect='equal')
+        else:
+            image = images_flat[i]
+            mask = masks_flat[i]
+            
+            axs[i, 0].imshow(image.T, aspect='equal')
+            axs[i, 2].imshow(mask[0].T, cmap="viridis", aspect='equal')
+
+        axs[i, 0].set_title("Post-Disaster Image")
+        axs[i, 0].axis('off')
+        
+        axs[i, 2].set_title("Ground Truth Mask")
+        axs[i, 2].axis('off')
+        
+        # Plot the predicted image
+        axs[i, 1].imshow(predictions_flat[i].T, cmap="viridis", aspect='equal')
+        axs[i, 1].set_title("Predicted Image")
+        axs[i, 1].axis('off')
+
+    plt.show()
+    
 batch_size = 8
 num_input_channels = 6
 num_classes = 4
 lr = 1e-5
 image_size = 224
 
-transforms = v2.Compose([
+image_transforms = v2.Compose([
     v2.Resize((image_size, image_size), antialias=True),
-    v2.RandomHorizontalFlip(p=0.5),
-    v2.RandomVerticalFlip(p=0.5),
-    v2.RandomRotation(degrees=(1, 359)),
-    v2.RandomResizedCrop(size=image_size, antialias=True)
+    v2.ToImage(),
+    v2.ToDtype(torch.float32, scale=True),
+    v2.Normalize(mean=(0.485, 0.456, 0.406), std=(0.229, 0.224, 0.225))  #These are the normalization values used by the pretrained weights in DeepLabv3
+    ])
+mask_transforms = v2.Compose([
+    v2.Resize(image_size, antialias=True),
+    v2.ToImage(),
+    v2.ToDtype(torch.float32, scale=False)
     ])
 
 cwd = os.getcwd()
 
-train_dataset = dataloader.HarveyData(os.path.join(cwd, 'dataset/training'), transforms=transforms)
+train_dataset = dataloader.HarveyData(os.path.join(cwd, 'dataset/training'), image_transforms=image_transforms, mask_transforms=mask_transforms)
 train_dataloader = DataLoader(train_dataset, batch_size=batch_size, shuffle=True)
 
-test_dataset = dataloader.HarveyData(os.path.join(cwd, 'dataset/testing'), transforms=transforms)
+test_dataset = dataloader.HarveyData(os.path.join(cwd, 'dataset/testing'), image_transforms=image_transforms, mask_transforms=mask_transforms)
 test_dataloader = DataLoader(test_dataset, batch_size=batch_size, shuffle=False)
 
 device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
+
 model = DeepLabV3(num_input_channels, num_classes).to(device)
+#model_preprocess = model.deeplabv3_weights.transforms()
 
 criterion = torch.nn.CrossEntropyLoss()
 optimizer = torch.optim.Adam(model.parameters(), lr=lr)
 
-num_epochs = 20
+softmax = nn.Softmax(dim=1)
 
+num_epochs = 50
+
+images = []
+masks = []
 predicted_images = []
 
 #Training
@@ -83,10 +131,7 @@ for epoch in range(num_epochs):
         mask = mask.to(device)
         
         optimizer.zero_grad()
-        outputs = model(image)
-        
-        mask_resize = Compose([v2.Resize((28, 28), antialias=True)])
-        mask = mask_resize(mask)
+        outputs = softmax(model(image)['out'])
         
         loss = criterion(outputs, mask)
         loss.backward()
@@ -111,52 +156,36 @@ for epoch in range(num_epochs):
             image = image.to(device)
             mask = mask.to(device)
             
-            outputs = model(image)
-            
-            mask_resize = Compose([v2.Resize((28, 28), antialias=True)])
-            mask = mask_resize(mask)
+            outputs = softmax(model(image)['out'])
         
             loss = criterion(outputs, mask)
             total_loss += loss.item()
             
-            softmax = nn.Softmax(dim=1)
-            predicted = torch.argmax(softmax(model(image)), axis=1, keepdim=True)
-            predicted_images.append(predicted.cpu().numpy())
+            predicted = torch.argmax(outputs, dim=1, keepdim=True)
             
-            correct_predictions += (predicted == mask).sum()
+            if (epoch + 1 == num_epochs):
+                images.append(image.cpu().numpy())
+                masks.append(mask.cpu().numpy())
+                predicted_images.append(predicted.cpu().numpy())
+            
+            correct_predictions += (predicted == mask).sum().item()
             total_pixels += torch.numel(predicted)
             dice_score += (2 * (predicted * mask).sum()) / ((predicted + mask).sum() + 1e-8)
     
     accuracy = correct_predictions / total_pixels * 100
-    average_loss = total_loss / len(test_dataloader)
+    average_loss = total_loss / len(test_dataset)
     dice_score = dice_score / len(test_dataset)
 
-    print('Accuracy: %.4f ---- Loss: %.4f ---- Dice: %.4f' % (accuracy, total_loss / test_dataset.__len__(), dice_score))
-   
-end_time = time.time()
-elapsed_time = end_time - start_time
-print(f"Elapsed Time: {elapsed_time} seconds")
-
-#Visualization       
-fig, axs = plt.subplots(batch_size, 3, figsize=(32, 32))
-
-for i in range(batch_size):
-    # Plot the input image    
-    image, mask = test_dataset.get_item_no_transforms(i)
-    
-    axs[i, 0].imshow(image.numpy()[3:6, :, :].T, aspect='equal')
-    axs[i, 0].set_title("Post-Disaster Image")
-    axs[i, 0].axis('off')
-
-    # Plot the predicted image
-    predicted_images_flat = [item for sublist in predicted_images for item in sublist]
-    axs[i, 1].imshow(predicted_images_flat[i].T, cmap="viridis", aspect='equal')  # Adjust the colormap as needed
-    axs[i, 1].set_title("Predicted Image")
-    axs[i, 1].axis('off')
-
-    # Plot the ground truth mask
-    axs[i, 2].imshow(mask.numpy()[0].T, cmap="viridis", aspect='equal')  # Assuming the mask is a single-channel image
-    axs[i, 2].set_title("Ground Truth Mask")
-    axs[i, 2].axis('off')
-
-plt.show()
+    print('Accuracy: %.4f ---- Loss: %.4f ---- Dice: %.4f' % (accuracy, average_loss, dice_score))
+    if (epoch + 1 == num_epochs):
+        end_time = time.time()
+        elapsed_time = end_time - start_time
+        print(f"Elapsed Time at Epoch {epoch + 1} : {elapsed_time} seconds")
+        
+        visualize_results(6, predicted_images, images, masks)
+        
+        images.clear()
+        masks.clear()
+        predicted_images.clear()
+        
+        start_time = time.time()
