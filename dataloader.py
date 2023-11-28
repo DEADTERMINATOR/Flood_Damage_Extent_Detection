@@ -4,6 +4,7 @@ from torch.utils.data import Dataset, DataLoader
 import torchvision.transforms as transforms
 from torchvision.transforms.functional import to_tensor
 
+import numpy as np
 import os
 
 from PIL import Image
@@ -43,11 +44,9 @@ class HarveyData(Dataset):
         post_image = self.post_images[idx]
         mask = self.masks[idx]
             
-        #Convert image to normalized tensor.
-        #pre_image = to_tensor(pre_image)
-        #post_image = to_tensor(post_image)
-        #mask = to_tensor(mask)
-        #mask *= 255  # Manually adjust the label values back to the original values after the normalization of to_tensor()
+        r, g, b, _ = mask.split()
+        mask = Image.merge("RGBA", (r, g, b, r))
+        mask = np.array(mask)
             
         #Apply transformations to images
         if (self.image_transforms is not None):
@@ -58,7 +57,7 @@ class HarveyData(Dataset):
             
         #Concatenate the pre and post disaster images together along the channel dimension.
         combined_image = torch.cat([pre_image, post_image], dim=0)
-        return post_image, mask
+        return combined_image, mask
         
     def get_item_no_transforms(self, idx):
         #Get pre and post image, and the mask, for the current index.
@@ -74,7 +73,7 @@ class HarveyData(Dataset):
         
         #Concatenate the pre and post disaster images together along the channel dimension.
         combined_image = torch.cat([pre_image, post_image], dim=0)
-        return post_image, mask
+        return combined_image, mask
     
     def __len__(self):
         return self.num_images

@@ -4,7 +4,9 @@ import torchvision
 from torchvision import models
 from torchvision.transforms import Compose, Resize, v2
 from torch.utils.data import DataLoader, Dataset
+
 import matplotlib.pyplot as plt
+from torchvision.models.segmentation.deeplabv3 import DeepLabHead
 
 import os
 import time
@@ -15,32 +17,15 @@ import dataloader
 class DeepLabV3(nn.Module):
     def __init__(self, num_input_channels, num_classes):
         super(DeepLabV3, self).__init__()
-        self.deeplabv3_weights = torchvision.models.segmentation.DeepLabV3_ResNet50_Weights.DEFAULT
-        self.resnet50_weights = models.ResNet50_Weights.DEFAULT
-        self.deeplabv3 = torchvision.models.segmentation.deeplabv3_resnet50(weights=self.deeplabv3_weights, weights_backbone=self.resnet50_weights)
+        self.deeplabv3_weights = torchvision.models.segmentation.DeepLabV3_ResNet101_Weights.DEFAULT
+        self.resnet101_weights = models.ResNet101_Weights.DEFAULT
+        self.deeplabv3 = torchvision.models.segmentation.deeplabv3_resnet101(weights=self.deeplabv3_weights, weights_backbone=self.resnet101_weights)
         
+        self.deeplabv3.backbone.conv1 = nn.Conv2d(num_input_channels, out_channels=64, kernel_size=7, stride=2, padding=3, bias=False)
         self.deeplabv3.classifier[-1] = torch.nn.Conv2d(in_channels=256, out_channels=num_classes, kernel_size=1, stride=1)
-        
-        """
-        # Modify the first convolutional layer of the ResNet50 backbone to accept num_input_channels channels        
-        backbone_conv1 = nn.Conv2d(num_input_channels, out_channels=64, kernel_size=7, stride=2, padding=3, bias=False)
-        self.modified_backbone = nn.Sequential(backbone_conv1,
-                                              *list(self.deeplabv3.backbone.children())[1:])
-        self.deeplabv3_head = nn.Sequential(*list(self.deeplabv3.children())[-1:])
-        self.deeplabv3_combine = nn.Sequential(self.modified_backbone,
-                                               self.deeplabv3_head)
-        """                                       
-
-        #print("----------ORIGINAL----------")
-        #print(nn.Sequential(*list(self.deeplabv3.children())[-2:]))
-        #print("----------MODIFIED----------")
-        #print(self.deeplabv3_combine)
-        #print("----------LAST ITEM----------")
-        #print(nn.Sequential(*list(self.deeplabv3.children())[-1:]))
         
     def forward(self, x):
         x = self.deeplabv3.forward(x)
-        #x = self.deeplabv3_combine.forward(x)
         return x
     
 def visualize_results(num_results, predictions, images=None, masks=None):
@@ -55,13 +40,13 @@ def visualize_results(num_results, predictions, images=None, masks=None):
         if (images == None or masks == None):    
             image, mask = test_dataset.get_item_no_transforms(i)
             
-            axs[i, 0].imshow(image.numpy()[:, :, :].T, aspect='equal')
+            axs[i, 0].imshow(image.numpy()[3:6, :, :].T, aspect='equal')
             axs[i, 2].imshow(mask.numpy()[0].T, cmap="viridis", aspect='equal')
         else:
             image = images_flat[i]
             mask = masks_flat[i]
             
-            axs[i, 0].imshow(image.T, aspect='equal')
+            axs[i, 0].imshow(image[3:6, :, :].T, aspect='equal')
             axs[i, 2].imshow(mask[0].T, cmap="viridis", aspect='equal')
 
         axs[i, 0].set_title("Post-Disaster Image")
@@ -90,9 +75,9 @@ image_transforms = v2.Compose([
     v2.Normalize(mean=(0.485, 0.456, 0.406), std=(0.229, 0.224, 0.225))  #These are the normalization values used by the pretrained weights in DeepLabv3
     ])
 mask_transforms = v2.Compose([
-    v2.Resize(image_size, antialias=True),
     v2.ToImage(),
-    v2.ToDtype(torch.float32, scale=False)
+    v2.ToDtype(torch.float32, scale=False),
+    v2.Resize(image_size, antialias=True)
     ])
 
 cwd = os.getcwd()
@@ -168,7 +153,7 @@ for epoch in range(num_epochs):
                 masks.append(mask.cpu().numpy())
                 predicted_images.append(predicted.cpu().numpy())
             
-            correct_predictions += (predicted == mask).sum().item()
+            correct_predictions += (predicted == mask).sum()
             total_pixels += torch.numel(predicted)
             dice_score += (2 * (predicted * mask).sum()) / ((predicted + mask).sum() + 1e-8)
     
