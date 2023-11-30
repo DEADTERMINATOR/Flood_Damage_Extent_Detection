@@ -32,7 +32,7 @@ class HarveyData(Dataset):
         for i in range(self.num_images):
             pre_image = Image.open(os.path.join(dataset_dir, 'pre_img', self.pre_image_paths[i]))
             post_image = Image.open(os.path.join(dataset_dir, 'post_img', self.post_image_paths[i]))
-            mask = Image.open(os.path.join(dataset_dir, 'post_msk', self.mask_paths[i]))
+            mask = Image.open(os.path.join(dataset_dir, 'post_msk', self.mask_paths[i])).convert('L')
             
             self.pre_images.append(pre_image)
             self.post_images.append(post_image)
@@ -44,9 +44,9 @@ class HarveyData(Dataset):
         post_image = self.post_images[idx]
         mask = self.masks[idx]
             
-        r, g, b, _ = mask.split()
-        mask = Image.merge("RGBA", (r, g, b, r))
-        mask = np.array(mask)
+        #r, g, b, _ = mask.split()
+        #mask = Image.merge("RGBA", (r, g, b, r))
+        #mask = np.array(mask)
             
         #Apply transformations to images
         if (self.image_transforms is not None):
