@@ -1,0 +1,29 @@
+<PAMDataset>
+  <Metadata>
+    <MDI key="DataType">Thematic</MDI>
+  </Metadata>
+  <PAMRasterBand band="1">
+    <Histograms>
+      <HistItem>
+        <HistMin>-0.5</HistMin>
+        <HistMax>100.5</HistMax>
+        <BucketCount>101</BucketCount>
+        <IncludeOutOfRange>1</IncludeOutOfRange>
+        <Approximate>0</Approximate>
+        <HistCounts>32350|705|359|281|277|267|270|249|254|240|254|246|223|201|204|187|194|184|204|173|193|165|187|199|190|154|157|174|179|177|185|183|178|192|167|174|216|167|171|218|187|227|228|252|257|271|281|328|351|371|366|407|442|480|553|594|621|663|691|794|875|867|947|924|1024|1049|1040|1038|1021|923|909|892|914|911|895|845|837|743|778|746|770|756|747|718|734|707|689|709|631|582|625|553|511|499|398|366|409|332|303|236|626</HistCounts>
+      </HistItem>
+    </Histograms>
+    <Metadata>
+      <MDI key="RepresentationType">THEMATIC</MDI>
+      <MDI key="STATISTICS_COVARIANCES">1287.319180441611</MDI>
+      <MDI key="STATISTICS_EXCLUDEDVALUES"></MDI>
+      <MDI key="STATISTICS_MAXIMUM">100</MDI>
+      <MDI key="STATISTICS_MEAN">36.429910191332</MDI>
+      <MDI key="STATISTICS_MEDIAN">33.000000</MDI>
+      <MDI key="STATISTICS_MINIMUM">0</MDI>
+      <MDI key="STATISTICS_SKIPFACTORX">1</MDI>
+      <MDI key="STATISTICS_SKIPFACTORY">1</MDI>
+      <MDI key="STATISTICS_STDDEV">35.879230488426</MDI>
+    </Metadata>
+  </PAMRasterBand>
+</PAMDataset>

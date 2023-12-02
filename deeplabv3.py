@@ -1,3 +1,4 @@
+from re import A
 import torch
 from torch import nn
 import torch.nn.functional as F
@@ -7,7 +8,10 @@ from torchvision import models
 from torchvision.transforms import Compose, Resize, v2
 from torch.utils.data import DataLoader, Dataset
 
+import numpy as np
+
 import matplotlib.pyplot as plt
+from sklearn.metrics import precision_recall_fscore_support
 
 import os
 import time
@@ -65,7 +69,6 @@ def visualize_results(num_results, predictions, images=None, masks=None, randomi
     if (masks != None):
         masks_flat = [item for sublist in masks for item in sublist]
         
-    print(len(predictions_flat))
     if (randomize_images):
         # Choose num_results number of images at random from the results.
         image_idxs = random.sample(range(0, len(predictions_flat) - 1), num_results)
@@ -100,14 +103,14 @@ def visualize_results(num_results, predictions, images=None, masks=None, randomi
         axs[i, 1].axis('off')
 
     plt.show()
-    
+
 batch_size = 8
 num_input_channels = 6
 num_classes = 4
-lr = 1e-5
+lr = 1e-4
 image_size = 224
 # Whether the models parameters should be saved following the completion of a run.
-save = True
+save = False
 #Whether an existing models parameters should be loaded before the run.
 load = False
 
@@ -122,7 +125,7 @@ image_transforms = v2.Compose([
     v2.Resize(image_size, antialias=True),
     v2.Normalize(mean=(0.485, 0.456, 0.406), std=(0.229, 0.224, 0.225))  #These are the normalization values used by the pretrained weights in DeepLabv3
     #horizontal_flip,
-    #vertical_flip,
+    #vertical_flip
     #rotation,
     #random_crop
     ])
@@ -131,7 +134,7 @@ mask_transforms = v2.Compose([
     v2.ToDtype(torch.int64, scale=False),
     v2.Resize(image_size, antialias=True)
     #horizontal_flip,
-    #vertical_flip,
+    #vertical_flip
     #rotation,
     #random_crop
     ])
@@ -192,9 +195,9 @@ for epoch in range(num_epochs):
     print('Epoch %d / %d --- Average Loss: %.4f' % (epoch + 1, num_epochs, epoch_loss / train_dataset.__len__()))
     
     total_loss = 0.0
-    correct_predictions = 0
-    total_pixels = 0
-    dice_score = 0
+    total_weighted_precision = 0.0
+    total_weighted_recall = 0.0
+    total_weighted_f1 = 0.0
  
 #Testing
     model.eval()
@@ -210,22 +213,29 @@ for epoch in range(num_epochs):
             loss = criterion(outputs, mask)
             total_loss += loss.item()
             
-            predicted = torch.argmax(outputs, dim=1, keepdim=True)
+            predicted = torch.argmax(outputs, dim=1, keepdim=False)
             
-            if (epoch + 1 == num_epochs):
-                images.append(image.cpu().numpy())
-                masks.append(mask.cpu().numpy())
-                predicted_images.append(predicted.cpu().numpy())
-            
-            correct_predictions += (predicted == mask).sum().item()
-            total_pixels += torch.numel(mask)
-            dice_score += (2 * (predicted * mask).sum()) / ((predicted + mask).sum() + 1e-8)
-    
-    accuracy = correct_predictions / total_pixels * 100
-    average_loss = total_loss / len(test_dataset)
-    dice_score = dice_score / len(test_dataset)
+            image = image.cpu().numpy()
+            mask = mask.cpu().numpy()
+            predicted = predicted.cpu().numpy()
 
-    print('Accuracy: %.4f ---- Loss: %.4f ---- Dice: %.4f' % (accuracy, average_loss, dice_score))
+            for i in range(len(mask)):
+                precision, recall, f1, _ = precision_recall_fscore_support(mask[i].flatten(), predicted[i].flatten(), average='macro', zero_division=0.0)
+                total_weighted_precision += precision
+                total_weighted_recall += recall
+                total_weighted_f1 += f1
+                      
+            if (epoch + 1 == num_epochs):
+                images.append(image)
+                masks.append(mask)
+                predicted_images.append(predicted)
+    
+    average_weighted_precision = total_weighted_precision / len(test_dataset)
+    average_weighted_recall = total_weighted_recall / len(test_dataset)
+    average_weighted_f1 = total_weighted_f1 / len(test_dataset)
+    average_loss = total_loss / len(test_dataset)
+
+    print('Average Precision: %.4f ---- Average Recall: %.4f ---- Average F1: %.4f ---- Average Loss: %.4f' % (average_weighted_precision, average_weighted_recall, average_weighted_f1, average_loss))
     
     if (epoch + 1 == num_epochs):
         end_time = time.time()
