@@ -61,7 +61,7 @@ class FocalLoss(nn.Module):
             return focal_loss
     
 def visualize_results(num_results, predictions, images=None, masks=None, randomize_images=False):
-    fig, axs = plt.subplots(num_results, 3, figsize=(32, 32))
+    fig, axes = plt.subplots(num_results, 3, figsize=(32, 32))
 
     predictions_flat = [item for sublist in predictions for item in sublist]
     if (images != None):
@@ -73,70 +73,65 @@ def visualize_results(num_results, predictions, images=None, masks=None, randomi
         # Choose num_results number of images at random from the results.
         image_idxs = random.sample(range(0, len(predictions_flat) - 1), num_results)
     else:
-        image_idxs = [i for i in range(num_results + 1)]
+        image_idxs = [i for i in range(1, num_results + 2)]
         
     for i in range(num_results):
         # Plot the input image and ground truth mask
         if (images == None or masks == None):    
-            image, mask = test_dataset.get_item_no_transforms(image_idxs[i])
+            image, mask = test_dataset.get_item_resize_only(image_idxs[i], image_size)
             
-            axs[i, 0].imshow(image.numpy()[0:3, :, :].T, aspect='equal')
-            axs[i, 0].imshow(image.numpy()[3:6, :, :].T, alpha=0.5, aspect='equal')
-            axs[i, 2].imshow(mask.numpy().T, cmap="viridis", aspect='equal')
+            #Reorder the channels for matplotlib.
+            image = torch.permute(image, (1, 2, 0))
+            mask = torch.permute(mask, (1, 2, 0))
+            
+            axes[i, 0].imshow(image.numpy()[:, :, 0:3], aspect='equal')
+            axes[i, 0].imshow(image.numpy()[:, :, 3:6], alpha=0.5, aspect='equal')
+            axes[i, 2].imshow(mask.numpy(), cmap="viridis", aspect='equal')
         else:
             image = images_flat[image_idxs[i]]
             mask = masks_flat[image_idxs[i]]
             
-            axs[i, 0].imshow(image[0:3, :, :].T, aspect='equal')
-            axs[i, 0].imshow(image[3:6, :, :].T, alpha=0.5, aspect='equal')
-            axs[i, 2].imshow(mask.T, cmap="viridis", aspect='equal')
+            #Reorder the channels for matplotlib.
+            image = np.transpose(image, (1, 2, 0))
+            #mask = np.transpose(mask, (1, 2, 0))
+            
+            axes[i, 0].imshow(image[:, :, 0:3], aspect='equal')
+            axes[i, 0].imshow(image[:, :, 3:6], alpha=0.5, aspect='equal')
+            axes[i, 2].imshow(mask, cmap="viridis", aspect='equal')
 
-        axs[i, 0].set_title("Combined Image")
-        axs[i, 0].axis('off')
+        axes[i, 0].set_title("Combined Image")
+        axes[i, 0].axis('off')
         
-        axs[i, 2].set_title("Ground Truth Mask")
-        axs[i, 2].axis('off')
+        axes[i, 2].set_title("Ground Truth Mask")
+        axes[i, 2].axis('off')
         
         # Plot the predicted image
-        axs[i, 1].imshow(predictions_flat[image_idxs[i]].T, cmap="viridis", aspect='equal')
-        axs[i, 1].set_title("Predicted Image")
-        axs[i, 1].axis('off')
+        axes[i, 1].imshow(predictions_flat[image_idxs[i]], cmap="viridis", aspect='equal')
+        axes[i, 1].set_title("Predicted Image")
+        axes[i, 1].axis('off')
 
     plt.show()
 
 batch_size = 8
 num_input_channels = 6
-num_classes = 4
+num_classes = 5
 lr = 1e-4
 image_size = 224
 # Whether the models parameters should be saved following the completion of a run.
-save = False
+save = True
 #Whether an existing models parameters should be loaded before the run.
 load = False
-
-horizontal_flip = v2.RandomHorizontalFlip(p=0.5)
-vertical_flip = v2.RandomVerticalFlip(p=0.5)
-rotation = v2.RandomRotation(random.randint(1, 359))
-random_crop = v2.RandomResizedCrop(size=image_size, antialias=True)
 
 image_transforms = v2.Compose([
     v2.ToImage(),
     v2.ToDtype(torch.float32, scale=True),
-    v2.Resize(image_size, antialias=True),
+    v2.Resize((image_size, image_size), antialias=True),
     v2.Normalize(mean=(0.485, 0.456, 0.406), std=(0.229, 0.224, 0.225))  #These are the normalization values used by the pretrained weights in DeepLabv3
-    #horizontal_flip,
-    #vertical_flip
-    #rotation,
-    #random_crop
     ])
 mask_transforms = v2.Compose([
     v2.ToImage(),
     v2.ToDtype(torch.int64, scale=False),
-    v2.Resize(image_size, antialias=True)
-    #horizontal_flip,
-    #vertical_flip
-    #rotation,
-    #random_crop
+    v2.Resize((image_size, image_size), antialias=True)
     ])
 
 cwd = os.getcwd()
@@ -195,9 +190,9 @@ for epoch in range(num_epochs):
     print('Epoch %d / %d --- Average Loss: %.4f' % (epoch + 1, num_epochs, epoch_loss / train_dataset.__len__()))
     
     total_loss = 0.0
-    total_weighted_precision = 0.0
-    total_weighted_recall = 0.0
-    total_weighted_f1 = 0.0
+    total_class_precision = [0.0, 0.0, 0.0, 0.0, 0.0]
+    total_class_recall = [0.0, 0.0, 0.0, 0.0, 0.0]
+    total_class_f1 = [0.0, 0.0, 0.0, 0.0, 0.0]
  
 #Testing
     model.eval()
@@ -220,22 +215,26 @@ for epoch in range(num_epochs):
             predicted = predicted.cpu().numpy()
 
             for i in range(len(mask)):
-                precision, recall, f1, _ = precision_recall_fscore_support(mask[i].flatten(), predicted[i].flatten(), average='macro', zero_division=0.0)
-                total_weighted_precision += precision
-                total_weighted_recall += recall
-                total_weighted_f1 += f1
+                precision, recall, f1, _ = precision_recall_fscore_support(mask[i].flatten(), predicted[i].flatten(), labels=[0, 1, 2, 3, 4], average=None, zero_division=0.0)
+                total_class_precision += precision
+                total_class_recall += recall
+                total_class_f1 += f1
                       
             if (epoch + 1 == num_epochs):
                 images.append(image)
                 masks.append(mask)
                 predicted_images.append(predicted)
     
-    average_weighted_precision = total_weighted_precision / len(test_dataset)
-    average_weighted_recall = total_weighted_recall / len(test_dataset)
-    average_weighted_f1 = total_weighted_f1 / len(test_dataset)
+    average_class_precision = total_class_precision / len(test_dataset)
+    average_class_recall = total_class_recall / len(test_dataset)
+    average_class_f1 = total_class_f1 / len(test_dataset)
     average_loss = total_loss / len(test_dataset)
 
-    print('Average Precision: %.4f ---- Average Recall: %.4f ---- Average F1: %.4f ---- Average Loss: %.4f' % (average_weighted_precision, average_weighted_recall, average_weighted_f1, average_loss))
+    print('Average No Damage Precision: %.4f ---- Average No Damage Recall: %.4f ---- Average No Damage F1: %.4f ---- Average Loss: %.4f' % (average_class_precision[0], average_class_recall[0], average_class_f1[0], average_loss))
+    print('Average Minor Precision: %.4f ---- Average Minor Recall: %.4f ---- Average Minor F1: %.4f' % (average_class_precision[1], average_class_recall[1], average_class_f1[1]))
+    print('Average Moderate Precision: %.4f ---- Average Moderate Recall: %.4f ---- Average Moderate F1: %.4f' % (average_class_precision[2], average_class_recall[2], average_class_f1[2]))
+    print('Average Major Precision: %.4f ---- Average Major Recall: %.4f ---- Average Major F1: %.4f' % (average_class_precision[3], average_class_recall[3], average_class_f1[3]))
+    print('Average Background Precision: %.4f ---- Average Background Recall: %.4f ---- Average Background F1: %.4f' % (average_class_precision[4], average_class_recall[4], average_class_f1[4]))
     
     if (epoch + 1 == num_epochs):
         end_time = time.time()
