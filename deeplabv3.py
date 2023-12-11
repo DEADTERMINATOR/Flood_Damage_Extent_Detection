@@ -31,7 +31,7 @@ class DeepLabV3(nn.Module):
         #Replaces the first convolution of the backbone of the model to accept 6-channel input.
         self.deeplabv3.backbone.conv1 = nn.Conv2d(num_input_channels, out_channels=64, kernel_size=7, stride=2, padding=3, bias=False)
         
-        #Replaces the final classifier to change the number of output classes to 4.
+        #Replaces the final classifier to change the number of output classes to the required number of classes.
         self.deeplabv3.classifier[-1] = torch.nn.Conv2d(in_channels=256, out_channels=num_classes, kernel_size=1, stride=1)
         
     def forward(self, x):
@@ -86,6 +86,8 @@ def visualize_results(num_results, predictions, images=None, masks=None, randomi
             
             axes[i, 0].imshow(image.numpy()[:, :, 0:3], aspect='equal')
             axes[i, 0].imshow(image.numpy()[:, :, 3:6], alpha=0.5, aspect='equal')
+            axes[i, 0].imshow(image.numpy()[:, :, 6:7], alpha=0.5, aspect='equal')
+            axes[i, 0].imshow(image.numpy()[:, :, 7:8], alpha=0.5, aspect='equal')
             axes[i, 2].imshow(mask.numpy(), cmap="viridis", aspect='equal')
         else:
             image = images_flat[image_idxs[i]]
@@ -97,6 +99,8 @@ def visualize_results(num_results, predictions, images=None, masks=None, randomi
             
             axes[i, 0].imshow(image[:, :, 0:3], aspect='equal')
             axes[i, 0].imshow(image[:, :, 3:6], alpha=0.5, aspect='equal')
+            axes[i, 0].imshow(image[:, :, 6:7], alpha=0.5, aspect='equal')
+            axes[i, 0].imshow(image[:, :, 7:8], alpha=0.5, aspect='equal')
             axes[i, 2].imshow(mask, cmap="viridis", aspect='equal')
 
         axes[i, 0].set_title("Combined Image")
@@ -113,34 +117,24 @@ def visualize_results(num_results, predictions, images=None, masks=None, randomi
     plt.show()
 
 batch_size = 8
-num_input_channels = 6
+num_input_channels = 8
 num_classes = 5
 lr = 1e-4
 image_size = 224
 # Whether the models parameters should be saved following the completion of a run.
-save = True
+save = False
 #Whether an existing models parameters should be loaded before the run.
 load = False
 
-image_transforms = v2.Compose([
-    v2.ToImage(),
-    v2.ToDtype(torch.float32, scale=True),
-    v2.Resize((image_size, image_size), antialias=True),
-    v2.Normalize(mean=(0.485, 0.456, 0.406), std=(0.229, 0.224, 0.225))  #These are the normalization values used by the pretrained weights in DeepLabv3
-    ])
-mask_transforms = v2.Compose([
-    v2.ToImage(),
-    v2.ToDtype(torch.int64, scale=False),
-    v2.Resize((image_size, image_size), antialias=True)
-    ])
-
 cwd = os.getcwd()
 
-train_dataset = dataloader.HarveyData(os.path.join(cwd, 'dataset/training'), image_transforms=image_transforms, mask_transforms=mask_transforms)
+print("Loading train and test images")
+train_dataset = dataloader.HarveyData(os.path.join(cwd, 'dataset/training'), image_size=image_size)
 train_dataloader = DataLoader(train_dataset, batch_size=batch_size, shuffle=True)
 
-test_dataset = dataloader.HarveyData(os.path.join(cwd, 'dataset/testing'), image_transforms=image_transforms, mask_transforms=mask_transforms)
+test_dataset = dataloader.HarveyData(os.path.join(cwd, 'dataset/testing'), image_size=image_size)
 test_dataloader = DataLoader(test_dataset, batch_size=batch_size, shuffle=False)
+print("Finished loading images")
 
 device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 
@@ -154,7 +148,7 @@ if (load):
 model.to(device)
 #model_preprocess = model.deeplabv3_weights.transforms()
 
-criterion = torch.nn.CrossEntropyLoss()#FocalLoss()
+criterion = FocalLoss(reduction='sum')#torch.nn.CrossEntropyLoss()
 optimizer = torch.optim.Adam(model.parameters(), lr=lr, weight_decay=0.0005)
 
 softmax = nn.Softmax(dim=1)
@@ -190,6 +184,11 @@ for epoch in range(num_epochs):
     print('Epoch %d / %d --- Average Loss: %.4f' % (epoch + 1, num_epochs, epoch_loss / train_dataset.__len__()))
     
     total_loss = 0.0
+    
+    total_macro_precision = 0.0
+    total_macro_recall = 0.0
+    total_macro_f1 = 0.0
+    
     total_class_precision = [0.0, 0.0, 0.0, 0.0, 0.0]
     total_class_recall = [0.0, 0.0, 0.0, 0.0, 0.0]
     total_class_f1 = [0.0, 0.0, 0.0, 0.0, 0.0]
@@ -215,6 +214,13 @@ for epoch in range(num_epochs):
             predicted = predicted.cpu().numpy()
 
             for i in range(len(mask)):
+                # Calculate scores globally.
+                precision, recall, f1, _ = precision_recall_fscore_support(mask[i].flatten(), predicted[i].flatten(), average='macro', zero_division=0.0)
+                total_macro_precision += precision
+                total_macro_recall += recall
+                total_macro_f1 += f1
+                
+                # Calculate scores by class.
                 precision, recall, f1, _ = precision_recall_fscore_support(mask[i].flatten(), predicted[i].flatten(), labels=[0, 1, 2, 3, 4], average=None, zero_division=0.0)
                 total_class_precision += precision
                 total_class_recall += recall
@@ -225,12 +231,18 @@ for epoch in range(num_epochs):
                 masks.append(mask)
                 predicted_images.append(predicted)
     
+    average_loss = total_loss / len(test_dataset)
+    
+    average_macro_precision = total_macro_precision / len(test_dataset)
+    average_macro_recall = total_macro_recall / len(test_dataset)
+    average_macro_f1 = total_macro_f1 / len(test_dataset)
+    
     average_class_precision = total_class_precision / len(test_dataset)
     average_class_recall = total_class_recall / len(test_dataset)
     average_class_f1 = total_class_f1 / len(test_dataset)
-    average_loss = total_loss / len(test_dataset)
 
-    print('Average No Damage Precision: %.4f ---- Average No Damage Recall: %.4f ---- Average No Damage F1: %.4f ---- Average Loss: %.4f' % (average_class_precision[0], average_class_recall[0], average_class_f1[0], average_loss))
+    print('Average Macro Precision: %.4f ---- Average Macro Recall: %.4f ---- Average F1 Score: %.4f ---- Average Loss: %.4f' % (average_macro_precision, average_macro_recall, average_macro_f1, average_loss))
+    print('Average No Damage Precision: %.4f ---- Average No Damage Recall: %.4f ---- Average No Damage F1: %.4f' % (average_class_precision[0], average_class_recall[0], average_class_f1[0]))
     print('Average Minor Precision: %.4f ---- Average Minor Recall: %.4f ---- Average Minor F1: %.4f' % (average_class_precision[1], average_class_recall[1], average_class_f1[1]))
     print('Average Moderate Precision: %.4f ---- Average Moderate Recall: %.4f ---- Average Moderate F1: %.4f' % (average_class_precision[2], average_class_recall[2], average_class_f1[2]))
     print('Average Major Precision: %.4f ---- Average Major Recall: %.4f ---- Average Major F1: %.4f' % (average_class_precision[3], average_class_recall[3], average_class_f1[3]))

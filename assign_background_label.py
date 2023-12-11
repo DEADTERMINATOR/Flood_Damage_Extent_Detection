@@ -5,7 +5,7 @@ import os
 def set_no_data_value(input_file, output_file, no_data_value, band_value_to_replace):
     with rasterio.open(input_file, "r+") as src:
         src.nodata = no_data_value
-        with rasterio.open(output_file, 'w',  **src.profile) as dst:
+        with rasterio.open(output_file, 'w', **src.profile) as dst:
             band = src.read(1)
             band = np.where(band==band_value_to_replace, no_data_value, band)
             dst.write(band, 1)
