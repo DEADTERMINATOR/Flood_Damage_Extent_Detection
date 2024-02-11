@@ -117,23 +117,34 @@ def visualize_results(num_results, predictions, images=None, masks=None, randomi
     plt.show()
 
 batch_size = 8
-num_input_channels = 8
+num_input_channels = 11
 num_classes = 5
 lr = 1e-4
 image_size = 224
+
 # Whether the models parameters should be saved following the completion of a run.
 save = False
 #Whether an existing models parameters should be loaded before the run.
 load = False
+#Tracking the highest current F1 score and the epoch it occurred on for the model to know when to best save the model.
+highest_f1 = (0, 0)
 
 cwd = os.getcwd()
 
 print("Loading train and test images")
-train_dataset = dataloader.HarveyData(os.path.join(cwd, 'dataset/training'), image_size=image_size)
-train_dataloader = DataLoader(train_dataset, batch_size=batch_size, shuffle=True)
 
+loading_start_time = time.time()
+train_dataset = dataloader.HarveyData(os.path.join(cwd, 'dataset/training'), image_size=image_size, verbose_logging=False)
+train_dataloader = DataLoader(train_dataset, batch_size=batch_size, shuffle=True)
+loading_end_time = time.time() - loading_start_time
+print(f'Total Train Image Loading Time: {loading_end_time} seconds')
+
+loading_start_time = time.time()
 test_dataset = dataloader.HarveyData(os.path.join(cwd, 'dataset/testing'), image_size=image_size)
 test_dataloader = DataLoader(test_dataset, batch_size=batch_size, shuffle=False)
+loading_end_time = time.time() - loading_start_time
+print(f'Total Test Image Loading Time: {loading_end_time} seconds')
+
 print("Finished loading images")
 
 device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
@@ -248,13 +259,18 @@ for epoch in range(num_epochs):
     print('Average Major Precision: %.4f ---- Average Major Recall: %.4f ---- Average Major F1: %.4f' % (average_class_precision[3], average_class_recall[3], average_class_f1[3]))
     print('Average Background Precision: %.4f ---- Average Background Recall: %.4f ---- Average Background F1: %.4f' % (average_class_precision[4], average_class_recall[4], average_class_f1[4]))
     
+    if (save and average_macro_f1 > highest_f1):
+        highest_f1[0] = average_macro_f1
+        highest_f1[1] = epoch + 1
+        torch.save(model.state_dict(), 'DeepLabv3.pt')
+        
     if (epoch + 1 == num_epochs):
         end_time = time.time()
         elapsed_time = end_time - start_time
         print(f"Elapsed Time at Epoch {epoch + 1} : {elapsed_time} seconds")
-        
-        if save:
-            torch.save(model.state_dict(), 'DeepLabv3.pt')
+            
+        if (save):
+            print(f"Best Model with F1 Score of {highest_f1[0]} Saved on Epoch {highest_f1[1]}")
             
         visualize_results(6, predicted_images, images, masks)
         
