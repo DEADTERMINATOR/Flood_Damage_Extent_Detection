@@ -1,7 +1,8 @@
-from re import A
+from tkinter import VERTICAL
 import torch
 from torch import nn
 import torch.nn.functional as F
+from torch.optim.lr_scheduler import StepLR
 
 import torchvision
 from torchvision import models
@@ -28,7 +29,7 @@ class DeepLabV3(nn.Module):
         self.resnet101_weights = models.ResNet101_Weights.DEFAULT
         self.deeplabv3 = torchvision.models.segmentation.deeplabv3_resnet101(weights=self.deeplabv3_weights, weights_backbone=self.resnet101_weights)
         
-        #Replaces the first convolution of the backbone of the model to accept 6-channel input.
+        #Replaces the first convolution of the backbone of the model to accept variable channel input.
         self.deeplabv3.backbone.conv1 = nn.Conv2d(num_input_channels, out_channels=64, kernel_size=7, stride=2, padding=3, bias=False)
         
         #Replaces the final classifier to change the number of output classes to the required number of classes.
@@ -86,8 +87,8 @@ def visualize_results(num_results, predictions, images=None, masks=None, randomi
             
             axes[i, 0].imshow(image.numpy()[:, :, 0:3], aspect='equal')
             axes[i, 0].imshow(image.numpy()[:, :, 3:6], alpha=0.5, aspect='equal')
-            axes[i, 0].imshow(image.numpy()[:, :, 6:7], alpha=0.5, aspect='equal')
-            axes[i, 0].imshow(image.numpy()[:, :, 7:8], alpha=0.5, aspect='equal')
+            #axes[i, 0].imshow(image.numpy()[:, :, 6:7], alpha=0.5, aspect='equal')
+            #axes[i, 0].imshow(image.numpy()[:, :, 7:8], alpha=0.5, aspect='equal')
             axes[i, 2].imshow(mask.numpy(), cmap="viridis", aspect='equal')
         else:
             image = images_flat[image_idxs[i]]
@@ -99,8 +100,8 @@ def visualize_results(num_results, predictions, images=None, masks=None, randomi
             
             axes[i, 0].imshow(image[:, :, 0:3], aspect='equal')
             axes[i, 0].imshow(image[:, :, 3:6], alpha=0.5, aspect='equal')
-            axes[i, 0].imshow(image[:, :, 6:7], alpha=0.5, aspect='equal')
-            axes[i, 0].imshow(image[:, :, 7:8], alpha=0.5, aspect='equal')
+            #axes[i, 0].imshow(image[:, :, 6:7], alpha=0.5, aspect='equal')
+            #axes[i, 0].imshow(image[:, :, 7:8], alpha=0.5, aspect='equal')
             axes[i, 2].imshow(mask, cmap="viridis", aspect='equal')
 
         axes[i, 0].set_title("Combined Image")
@@ -117,7 +118,7 @@ def visualize_results(num_results, predictions, images=None, masks=None, randomi
     plt.show()
 
 batch_size = 8
-num_input_channels = 11
+num_input_channels = 25
 num_classes = 5
 lr = 1e-4
 image_size = 224
@@ -134,13 +135,13 @@ cwd = os.getcwd()
 print("Loading train and test images")
 
 loading_start_time = time.time()
-train_dataset = dataloader.HarveyData(os.path.join(cwd, 'dataset/training'), image_size=image_size, verbose_logging=False)
+train_dataset = dataloader.HarveyData(os.path.join(cwd, 'dataset/training'), image_size=image_size, augment_data=True, verbose_logging=False)
 train_dataloader = DataLoader(train_dataset, batch_size=batch_size, shuffle=True)
 loading_end_time = time.time() - loading_start_time
 print(f'Total Train Image Loading Time: {loading_end_time} seconds')
 
 loading_start_time = time.time()
-test_dataset = dataloader.HarveyData(os.path.join(cwd, 'dataset/testing'), image_size=image_size)
+test_dataset = dataloader.HarveyData(os.path.join(cwd, 'dataset/testing'), image_size=image_size, augment_data=False, verbose_logging=False)
 test_dataloader = DataLoader(test_dataset, batch_size=batch_size, shuffle=False)
 loading_end_time = time.time() - loading_start_time
 print(f'Total Test Image Loading Time: {loading_end_time} seconds')
@@ -159,12 +160,13 @@ if (load):
 model.to(device)
 #model_preprocess = model.deeplabv3_weights.transforms()
 
-criterion = FocalLoss(reduction='sum')#torch.nn.CrossEntropyLoss()
+criterion = FocalLoss(reduction='mean')#torch.nn.CrossEntropyLoss()
 optimizer = torch.optim.Adam(model.parameters(), lr=lr, weight_decay=0.0005)
+scheduler = StepLR(optimizer, step_size=30, gamma=0.1)
 
-softmax = nn.Softmax(dim=1)
+#softmax = nn.Softmax(dim=1)
 
-num_epochs = 50
+num_epochs = 1
 
 images = []
 masks = []
@@ -181,7 +183,7 @@ for epoch in range(num_epochs):
         image = image.to(device)
         mask = mask.squeeze().to(device)
         
-        outputs = softmax(model(image)['out'])
+        outputs = model(image)['out']
         
         loss = criterion(outputs, mask)
         loss.backward()
@@ -213,7 +215,7 @@ for epoch in range(num_epochs):
             image = image.to(device)
             mask = mask.squeeze().to(device)
             
-            outputs = softmax(model(image)['out'])
+            outputs = model(image)['out']
         
             loss = criterion(outputs, mask)
             total_loss += loss.item()
@@ -259,23 +261,28 @@ for epoch in range(num_epochs):
     print('Average Major Precision: %.4f ---- Average Major Recall: %.4f ---- Average Major F1: %.4f' % (average_class_precision[3], average_class_recall[3], average_class_f1[3]))
     print('Average Background Precision: %.4f ---- Average Background Recall: %.4f ---- Average Background F1: %.4f' % (average_class_precision[4], average_class_recall[4], average_class_f1[4]))
     
-    if (save and average_macro_f1 > highest_f1):
-        highest_f1[0] = average_macro_f1
-        highest_f1[1] = epoch + 1
-        torch.save(model.state_dict(), 'DeepLabv3.pt')
-        
+    scheduler.step()
+    
+    if (save and average_macro_f1 > highest_f1[0]):
+        highest_f1 = (average_macro_f1, epoch + 1)
+        save_file = f'drive/MyDrive/Flood Damage Extent Detection/DeepLabv3_epoch_{highest_f1[1]}_{highest_f1[0]}.pt'
+        torch.save(model.state_dict(), save_file)
+        print(f'Saved Model to {save_file}')
+
     if (epoch + 1 == num_epochs):
         end_time = time.time()
         elapsed_time = end_time - start_time
         print(f"Elapsed Time at Epoch {epoch + 1} : {elapsed_time} seconds")
-            
-        if (save):
-            print(f"Best Model with F1 Score of {highest_f1[0]} Saved on Epoch {highest_f1[1]}")
-            
+
+        if save:
+            save_file = f'drive/MyDrive/Flood Damage Extent Detection/DeepLabv3_epoch_{epoch + 1}_{average_macro_f1}.pt'
+            torch.save(model.state_dict(), save_file)
+            print(f'Saved Model to {save_file}')
+
         visualize_results(6, predicted_images, images, masks)
-        
+
         images.clear()
         masks.clear()
         predicted_images.clear()
-        
+
         start_time = time.time()

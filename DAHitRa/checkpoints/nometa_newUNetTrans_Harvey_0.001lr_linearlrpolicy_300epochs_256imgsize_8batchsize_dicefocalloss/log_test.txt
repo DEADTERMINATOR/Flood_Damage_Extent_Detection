@@ -1,0 +1,144 @@
+================ (Sat Mar  9 17:25:44 2024) ================
+gpu_ids: [0] project_name: nometa_newUNetTrans_Harvey_0.001lr_linearlrpolicy_300epochs_256imgsize_8batchsize_dicefocalloss checkpoint_root: checkpoints num_workers: 4 dataset: HarveyDataset data_name: Harvey batch_size: 8 split: train split_val: val img_size: 256 n_class: 5 net_G: newUNetTrans loss: dice+focal optimizer: sgd lr: 0.001 max_epochs: 200 lr_policy: linear lr_decay_iters: 100 checkpoint_dir: checkpoints\nometa_newUNetTrans_Harvey_0.001lr_linearlrpolicy_300epochs_256imgsize_8batchsize_dicefocalloss vis_dir: vis\nometa_newUNetTrans_Harvey_0.001lr_linearlrpolicy_300epochs_256imgsize_8batchsize_dicefocalloss loading last checkpoint...
+Eval Historical_best_acc = 0.3998 (at epoch 192)
+
+Begin evaluation...
+Is_training: False. [1,6],  running_mf1: 0.34663
+acc: 0.93648 miou: 0.29895 mf1: 0.33686 iou_0: 0.55922 iou_1: 0.00021 iou_2: 0.00000 iou_3: 0.00000 iou_4: 0.93531 F1_0: 0.71731 F1_1: 0.00043 F1_2: 0.00000 F1_3: 0.00000 F1_4: 0.96658 precision_0: 0.81934 precision_1: 0.06000 precision_2: 0.00000 precision_3: 0.00000 precision_4: 0.94758 recall_0: 0.63788 recall_1: 0.00022 recall_2: 0.00000 recall_3: 0.00000 recall_4: 0.98635 
+
+================ (Sat Mar  9 20:33:05 2024) ================
+gpu_ids: [0] project_name: nometa_newUNetTrans_Harvey_0.001lr_linearlrpolicy_300epochs_256imgsize_8batchsize_dicefocalloss checkpoint_root: checkpoints num_workers: 4 dataset: HarveyDataset data_name: Harvey batch_size: 8 split: train split_val: val img_size: 256 n_class: 5 net_G: newUNetTrans loss: dice+focal optimizer: sgd lr: 0.001 max_epochs: 300 lr_policy: linear lr_decay_iters: 100 checkpoint_dir: checkpoints\nometa_newUNetTrans_Harvey_0.001lr_linearlrpolicy_300epochs_256imgsize_8batchsize_dicefocalloss vis_dir: vis\nometa_newUNetTrans_Harvey_0.001lr_linearlrpolicy_300epochs_256imgsize_8batchsize_dicefocalloss loading last checkpoint...
+Eval Historical_best_acc = 0.4080 (at epoch 266)
+
+Begin evaluation...
+Is_training: False. [1,6],  running_mf1: 0.34496
+acc: 0.93713 miou: 0.30026 mf1: 0.33784 iou_0: 0.56510 iou_1: 0.00000 iou_2: 0.00000 iou_3: 0.00000 iou_4: 0.93620 F1_0: 0.72213 F1_1: 0.00000 F1_2: 0.00000 F1_3: 0.00000 F1_4: 0.96705 precision_0: 0.81455 precision_1: 0.00000 precision_2: 0.00000 precision_3: 0.00000 precision_4: 0.94905 recall_0: 0.64854 recall_1: 0.00000 recall_2: 0.00000 recall_3: 0.00000 recall_4: 0.98574 
+
+================ (Sat Mar  9 21:48:14 2024) ================
+gpu_ids: [0] project_name: nometa_newUNetTrans_Harvey_0.001lr_linearlrpolicy_300epochs_256imgsize_8batchsize_dicefocalloss print_models: False num_workers: 4 dataset: HarveyDataset data_name: Harvey batch_size: 8 split: test img_size: 256 n_class: 5 net_G: newUNetTrans checkpoint_name: best_ckpt.pt checkpoint_dir: checkpoints\nometa_newUNetTrans_Harvey_0.001lr_linearlrpolicy_300epochs_256imgsize_8batchsize_dicefocalloss vis_dir: vis2\nometa_newUNetTrans_Harvey_0.001lr_linearlrpolicy_300epochs_256imgsize_8batchsize_dicefocalloss loading last checkpoint...
+Eval Historical_best_acc = 0.4080 (at epoch 266)
+
+Begin evaluation...
+Is_training: False. [1,6],  running_mf1: 0.34496
+acc: 0.93713 miou: 0.30026 mf1: 0.33784 iou_0: 0.56510 iou_1: 0.00000 iou_2: 0.00000 iou_3: 0.00000 iou_4: 0.93620 F1_0: 0.72213 F1_1: 0.00000 F1_2: 0.00000 F1_3: 0.00000 F1_4: 0.96705 precision_0: 0.81455 precision_1: 0.00000 precision_2: 0.00000 precision_3: 0.00000 precision_4: 0.94905 recall_0: 0.64854 recall_1: 0.00000 recall_2: 0.00000 recall_3: 0.00000 recall_4: 0.98574 
+
+================ (Sat Mar  9 21:48:56 2024) ================
+gpu_ids: [0] project_name: nometa_newUNetTrans_Harvey_0.001lr_linearlrpolicy_300epochs_256imgsize_8batchsize_dicefocalloss print_models: False num_workers: 4 dataset: HarveyDataset data_name: Harvey batch_size: 8 split: test img_size: 256 n_class: 5 net_G: newUNetTrans checkpoint_name: best_ckpt.pt checkpoint_dir: checkpoints\nometa_newUNetTrans_Harvey_0.001lr_linearlrpolicy_300epochs_256imgsize_8batchsize_dicefocalloss vis_dir: vis2\nometa_newUNetTrans_Harvey_0.001lr_linearlrpolicy_300epochs_256imgsize_8batchsize_dicefocalloss loading last checkpoint...
+Eval Historical_best_acc = 0.4080 (at epoch 266)
+
+Begin evaluation...
+Is_training: False. [1,6],  running_mf1: 0.34496
+acc: 0.93713 miou: 0.30026 mf1: 0.33784 iou_0: 0.56510 iou_1: 0.00000 iou_2: 0.00000 iou_3: 0.00000 iou_4: 0.93620 F1_0: 0.72213 F1_1: 0.00000 F1_2: 0.00000 F1_3: 0.00000 F1_4: 0.96705 precision_0: 0.81455 precision_1: 0.00000 precision_2: 0.00000 precision_3: 0.00000 precision_4: 0.94905 recall_0: 0.64854 recall_1: 0.00000 recall_2: 0.00000 recall_3: 0.00000 recall_4: 0.98574 
+
+================ (Sat Mar  9 21:49:38 2024) ================
+gpu_ids: [0] project_name: nometa_newUNetTrans_Harvey_0.001lr_linearlrpolicy_300epochs_256imgsize_8batchsize_dicefocalloss print_models: False num_workers: 4 dataset: HarveyDataset data_name: Harvey batch_size: 8 split: test img_size: 256 n_class: 5 net_G: newUNetTrans checkpoint_name: best_ckpt.pt checkpoint_dir: checkpoints\nometa_newUNetTrans_Harvey_0.001lr_linearlrpolicy_300epochs_256imgsize_8batchsize_dicefocalloss vis_dir: vis2\nometa_newUNetTrans_Harvey_0.001lr_linearlrpolicy_300epochs_256imgsize_8batchsize_dicefocalloss loading last checkpoint...
+Eval Historical_best_acc = 0.4080 (at epoch 266)
+
+Begin evaluation...
+Is_training: False. [1,6],  running_mf1: 0.34496
+acc: 0.93713 miou: 0.30026 mf1: 0.33784 iou_0: 0.56510 iou_1: 0.00000 iou_2: 0.00000 iou_3: 0.00000 iou_4: 0.93620 F1_0: 0.72213 F1_1: 0.00000 F1_2: 0.00000 F1_3: 0.00000 F1_4: 0.96705 precision_0: 0.81455 precision_1: 0.00000 precision_2: 0.00000 precision_3: 0.00000 precision_4: 0.94905 recall_0: 0.64854 recall_1: 0.00000 recall_2: 0.00000 recall_3: 0.00000 recall_4: 0.98574 
+
+================ (Sat Mar  9 21:50:20 2024) ================
+gpu_ids: [0] project_name: nometa_newUNetTrans_Harvey_0.001lr_linearlrpolicy_300epochs_256imgsize_8batchsize_dicefocalloss print_models: False num_workers: 4 dataset: HarveyDataset data_name: Harvey batch_size: 8 split: test img_size: 256 n_class: 5 net_G: newUNetTrans checkpoint_name: best_ckpt.pt checkpoint_dir: checkpoints\nometa_newUNetTrans_Harvey_0.001lr_linearlrpolicy_300epochs_256imgsize_8batchsize_dicefocalloss vis_dir: vis2\nometa_newUNetTrans_Harvey_0.001lr_linearlrpolicy_300epochs_256imgsize_8batchsize_dicefocalloss loading last checkpoint...
+Eval Historical_best_acc = 0.4080 (at epoch 266)
+
+Begin evaluation...
+Is_training: False. [1,6],  running_mf1: 0.34496
+acc: 0.93713 miou: 0.30026 mf1: 0.33784 iou_0: 0.56510 iou_1: 0.00000 iou_2: 0.00000 iou_3: 0.00000 iou_4: 0.93620 F1_0: 0.72213 F1_1: 0.00000 F1_2: 0.00000 F1_3: 0.00000 F1_4: 0.96705 precision_0: 0.81455 precision_1: 0.00000 precision_2: 0.00000 precision_3: 0.00000 precision_4: 0.94905 recall_0: 0.64854 recall_1: 0.00000 recall_2: 0.00000 recall_3: 0.00000 recall_4: 0.98574 
+
+================ (Sat Mar  9 21:51:02 2024) ================
+gpu_ids: [0] project_name: nometa_newUNetTrans_Harvey_0.001lr_linearlrpolicy_300epochs_256imgsize_8batchsize_dicefocalloss print_models: False num_workers: 4 dataset: HarveyDataset data_name: Harvey batch_size: 8 split: test img_size: 256 n_class: 5 net_G: newUNetTrans checkpoint_name: best_ckpt.pt checkpoint_dir: checkpoints\nometa_newUNetTrans_Harvey_0.001lr_linearlrpolicy_300epochs_256imgsize_8batchsize_dicefocalloss vis_dir: vis2\nometa_newUNetTrans_Harvey_0.001lr_linearlrpolicy_300epochs_256imgsize_8batchsize_dicefocalloss loading last checkpoint...
+Eval Historical_best_acc = 0.4080 (at epoch 266)
+
+Begin evaluation...
+Is_training: False. [1,6],  running_mf1: 0.34496
+acc: 0.93713 miou: 0.30026 mf1: 0.33784 iou_0: 0.56510 iou_1: 0.00000 iou_2: 0.00000 iou_3: 0.00000 iou_4: 0.93620 F1_0: 0.72213 F1_1: 0.00000 F1_2: 0.00000 F1_3: 0.00000 F1_4: 0.96705 precision_0: 0.81455 precision_1: 0.00000 precision_2: 0.00000 precision_3: 0.00000 precision_4: 0.94905 recall_0: 0.64854 recall_1: 0.00000 recall_2: 0.00000 recall_3: 0.00000 recall_4: 0.98574 
+
+================ (Sat Mar  9 21:51:45 2024) ================
+gpu_ids: [0] project_name: nometa_newUNetTrans_Harvey_0.001lr_linearlrpolicy_300epochs_256imgsize_8batchsize_dicefocalloss print_models: False num_workers: 4 dataset: HarveyDataset data_name: Harvey batch_size: 8 split: test img_size: 256 n_class: 5 net_G: newUNetTrans checkpoint_name: best_ckpt.pt checkpoint_dir: checkpoints\nometa_newUNetTrans_Harvey_0.001lr_linearlrpolicy_300epochs_256imgsize_8batchsize_dicefocalloss vis_dir: vis2\nometa_newUNetTrans_Harvey_0.001lr_linearlrpolicy_300epochs_256imgsize_8batchsize_dicefocalloss loading last checkpoint...
+Eval Historical_best_acc = 0.4080 (at epoch 266)
+
+Begin evaluation...
+Is_training: False. [1,6],  running_mf1: 0.34496
+acc: 0.93713 miou: 0.30026 mf1: 0.33784 iou_0: 0.56510 iou_1: 0.00000 iou_2: 0.00000 iou_3: 0.00000 iou_4: 0.93620 F1_0: 0.72213 F1_1: 0.00000 F1_2: 0.00000 F1_3: 0.00000 F1_4: 0.96705 precision_0: 0.81455 precision_1: 0.00000 precision_2: 0.00000 precision_3: 0.00000 precision_4: 0.94905 recall_0: 0.64854 recall_1: 0.00000 recall_2: 0.00000 recall_3: 0.00000 recall_4: 0.98574 
+
+================ (Sat Mar  9 21:52:31 2024) ================
+gpu_ids: [0] project_name: nometa_newUNetTrans_Harvey_0.001lr_linearlrpolicy_300epochs_256imgsize_8batchsize_dicefocalloss print_models: False num_workers: 4 dataset: HarveyDataset data_name: Harvey batch_size: 8 split: test img_size: 256 n_class: 5 net_G: newUNetTrans checkpoint_name: best_ckpt.pt checkpoint_dir: checkpoints\nometa_newUNetTrans_Harvey_0.001lr_linearlrpolicy_300epochs_256imgsize_8batchsize_dicefocalloss vis_dir: vis2\nometa_newUNetTrans_Harvey_0.001lr_linearlrpolicy_300epochs_256imgsize_8batchsize_dicefocalloss loading last checkpoint...
+Eval Historical_best_acc = 0.4080 (at epoch 266)
+
+Begin evaluation...
+Is_training: False. [1,6],  running_mf1: 0.34496
+acc: 0.93713 miou: 0.30026 mf1: 0.33784 iou_0: 0.56510 iou_1: 0.00000 iou_2: 0.00000 iou_3: 0.00000 iou_4: 0.93620 F1_0: 0.72213 F1_1: 0.00000 F1_2: 0.00000 F1_3: 0.00000 F1_4: 0.96705 precision_0: 0.81455 precision_1: 0.00000 precision_2: 0.00000 precision_3: 0.00000 precision_4: 0.94905 recall_0: 0.64854 recall_1: 0.00000 recall_2: 0.00000 recall_3: 0.00000 recall_4: 0.98574 
+
+================ (Sat Mar  9 21:53:14 2024) ================
+gpu_ids: [0] project_name: nometa_newUNetTrans_Harvey_0.001lr_linearlrpolicy_300epochs_256imgsize_8batchsize_dicefocalloss print_models: False num_workers: 4 dataset: HarveyDataset data_name: Harvey batch_size: 8 split: test img_size: 256 n_class: 5 net_G: newUNetTrans checkpoint_name: best_ckpt.pt checkpoint_dir: checkpoints\nometa_newUNetTrans_Harvey_0.001lr_linearlrpolicy_300epochs_256imgsize_8batchsize_dicefocalloss vis_dir: vis2\nometa_newUNetTrans_Harvey_0.001lr_linearlrpolicy_300epochs_256imgsize_8batchsize_dicefocalloss loading last checkpoint...
+Eval Historical_best_acc = 0.4080 (at epoch 266)
+
+Begin evaluation...
+Is_training: False. [1,6],  running_mf1: 0.34496
+acc: 0.93713 miou: 0.30026 mf1: 0.33784 iou_0: 0.56510 iou_1: 0.00000 iou_2: 0.00000 iou_3: 0.00000 iou_4: 0.93620 F1_0: 0.72213 F1_1: 0.00000 F1_2: 0.00000 F1_3: 0.00000 F1_4: 0.96705 precision_0: 0.81455 precision_1: 0.00000 precision_2: 0.00000 precision_3: 0.00000 precision_4: 0.94905 recall_0: 0.64854 recall_1: 0.00000 recall_2: 0.00000 recall_3: 0.00000 recall_4: 0.98574 
+
+================ (Sat Mar  9 21:53:55 2024) ================
+gpu_ids: [0] project_name: nometa_newUNetTrans_Harvey_0.001lr_linearlrpolicy_300epochs_256imgsize_8batchsize_dicefocalloss print_models: False num_workers: 4 dataset: HarveyDataset data_name: Harvey batch_size: 8 split: test img_size: 256 n_class: 5 net_G: newUNetTrans checkpoint_name: best_ckpt.pt checkpoint_dir: checkpoints\nometa_newUNetTrans_Harvey_0.001lr_linearlrpolicy_300epochs_256imgsize_8batchsize_dicefocalloss vis_dir: vis2\nometa_newUNetTrans_Harvey_0.001lr_linearlrpolicy_300epochs_256imgsize_8batchsize_dicefocalloss loading last checkpoint...
+Eval Historical_best_acc = 0.4080 (at epoch 266)
+
+Begin evaluation...
+Is_training: False. [1,6],  running_mf1: 0.34496
+acc: 0.93713 miou: 0.30026 mf1: 0.33784 iou_0: 0.56510 iou_1: 0.00000 iou_2: 0.00000 iou_3: 0.00000 iou_4: 0.93620 F1_0: 0.72213 F1_1: 0.00000 F1_2: 0.00000 F1_3: 0.00000 F1_4: 0.96705 precision_0: 0.81455 precision_1: 0.00000 precision_2: 0.00000 precision_3: 0.00000 precision_4: 0.94905 recall_0: 0.64854 recall_1: 0.00000 recall_2: 0.00000 recall_3: 0.00000 recall_4: 0.98574 
+
+================ (Sat Mar  9 21:54:36 2024) ================
+gpu_ids: [0] project_name: nometa_newUNetTrans_Harvey_0.001lr_linearlrpolicy_300epochs_256imgsize_8batchsize_dicefocalloss print_models: False num_workers: 4 dataset: HarveyDataset data_name: Harvey batch_size: 8 split: test img_size: 256 n_class: 5 net_G: newUNetTrans checkpoint_name: best_ckpt.pt checkpoint_dir: checkpoints\nometa_newUNetTrans_Harvey_0.001lr_linearlrpolicy_300epochs_256imgsize_8batchsize_dicefocalloss vis_dir: vis2\nometa_newUNetTrans_Harvey_0.001lr_linearlrpolicy_300epochs_256imgsize_8batchsize_dicefocalloss loading last checkpoint...
+Eval Historical_best_acc = 0.4080 (at epoch 266)
+
+Begin evaluation...
+Is_training: False. [1,6],  running_mf1: 0.34496
+acc: 0.93713 miou: 0.30026 mf1: 0.33784 iou_0: 0.56510 iou_1: 0.00000 iou_2: 0.00000 iou_3: 0.00000 iou_4: 0.93620 F1_0: 0.72213 F1_1: 0.00000 F1_2: 0.00000 F1_3: 0.00000 F1_4: 0.96705 precision_0: 0.81455 precision_1: 0.00000 precision_2: 0.00000 precision_3: 0.00000 precision_4: 0.94905 recall_0: 0.64854 recall_1: 0.00000 recall_2: 0.00000 recall_3: 0.00000 recall_4: 0.98574 
+
+================ (Sat Mar  9 21:55:18 2024) ================
+gpu_ids: [0] project_name: nometa_newUNetTrans_Harvey_0.001lr_linearlrpolicy_300epochs_256imgsize_8batchsize_dicefocalloss print_models: False num_workers: 4 dataset: HarveyDataset data_name: Harvey batch_size: 8 split: test img_size: 256 n_class: 5 net_G: newUNetTrans checkpoint_name: best_ckpt.pt checkpoint_dir: checkpoints\nometa_newUNetTrans_Harvey_0.001lr_linearlrpolicy_300epochs_256imgsize_8batchsize_dicefocalloss vis_dir: vis2\nometa_newUNetTrans_Harvey_0.001lr_linearlrpolicy_300epochs_256imgsize_8batchsize_dicefocalloss loading last checkpoint...
+Eval Historical_best_acc = 0.4080 (at epoch 266)
+
+Begin evaluation...
+Is_training: False. [1,6],  running_mf1: 0.34496
+acc: 0.93713 miou: 0.30026 mf1: 0.33784 iou_0: 0.56510 iou_1: 0.00000 iou_2: 0.00000 iou_3: 0.00000 iou_4: 0.93620 F1_0: 0.72213 F1_1: 0.00000 F1_2: 0.00000 F1_3: 0.00000 F1_4: 0.96705 precision_0: 0.81455 precision_1: 0.00000 precision_2: 0.00000 precision_3: 0.00000 precision_4: 0.94905 recall_0: 0.64854 recall_1: 0.00000 recall_2: 0.00000 recall_3: 0.00000 recall_4: 0.98574 
+
+================ (Sat Mar  9 21:56:00 2024) ================
+gpu_ids: [0] project_name: nometa_newUNetTrans_Harvey_0.001lr_linearlrpolicy_300epochs_256imgsize_8batchsize_dicefocalloss print_models: False num_workers: 4 dataset: HarveyDataset data_name: Harvey batch_size: 8 split: test img_size: 256 n_class: 5 net_G: newUNetTrans checkpoint_name: best_ckpt.pt checkpoint_dir: checkpoints\nometa_newUNetTrans_Harvey_0.001lr_linearlrpolicy_300epochs_256imgsize_8batchsize_dicefocalloss vis_dir: vis2\nometa_newUNetTrans_Harvey_0.001lr_linearlrpolicy_300epochs_256imgsize_8batchsize_dicefocalloss loading last checkpoint...
+Eval Historical_best_acc = 0.4080 (at epoch 266)
+
+Begin evaluation...
+Is_training: False. [1,6],  running_mf1: 0.34496
+acc: 0.93713 miou: 0.30026 mf1: 0.33784 iou_0: 0.56510 iou_1: 0.00000 iou_2: 0.00000 iou_3: 0.00000 iou_4: 0.93620 F1_0: 0.72213 F1_1: 0.00000 F1_2: 0.00000 F1_3: 0.00000 F1_4: 0.96705 precision_0: 0.81455 precision_1: 0.00000 precision_2: 0.00000 precision_3: 0.00000 precision_4: 0.94905 recall_0: 0.64854 recall_1: 0.00000 recall_2: 0.00000 recall_3: 0.00000 recall_4: 0.98574 
+
+================ (Sat Mar  9 21:56:42 2024) ================
+gpu_ids: [0] project_name: nometa_newUNetTrans_Harvey_0.001lr_linearlrpolicy_300epochs_256imgsize_8batchsize_dicefocalloss print_models: False num_workers: 4 dataset: HarveyDataset data_name: Harvey batch_size: 8 split: test img_size: 256 n_class: 5 net_G: newUNetTrans checkpoint_name: best_ckpt.pt checkpoint_dir: checkpoints\nometa_newUNetTrans_Harvey_0.001lr_linearlrpolicy_300epochs_256imgsize_8batchsize_dicefocalloss vis_dir: vis2\nometa_newUNetTrans_Harvey_0.001lr_linearlrpolicy_300epochs_256imgsize_8batchsize_dicefocalloss loading last checkpoint...
+Eval Historical_best_acc = 0.4080 (at epoch 266)
+
+Begin evaluation...
+Is_training: False. [1,6],  running_mf1: 0.34496
+acc: 0.93713 miou: 0.30026 mf1: 0.33784 iou_0: 0.56510 iou_1: 0.00000 iou_2: 0.00000 iou_3: 0.00000 iou_4: 0.93620 F1_0: 0.72213 F1_1: 0.00000 F1_2: 0.00000 F1_3: 0.00000 F1_4: 0.96705 precision_0: 0.81455 precision_1: 0.00000 precision_2: 0.00000 precision_3: 0.00000 precision_4: 0.94905 recall_0: 0.64854 recall_1: 0.00000 recall_2: 0.00000 recall_3: 0.00000 recall_4: 0.98574 
+
+================ (Sat Mar  9 21:57:26 2024) ================
+gpu_ids: [0] project_name: nometa_newUNetTrans_Harvey_0.001lr_linearlrpolicy_300epochs_256imgsize_8batchsize_dicefocalloss print_models: False num_workers: 4 dataset: HarveyDataset data_name: Harvey batch_size: 8 split: test img_size: 256 n_class: 5 net_G: newUNetTrans checkpoint_name: best_ckpt.pt checkpoint_dir: checkpoints\nometa_newUNetTrans_Harvey_0.001lr_linearlrpolicy_300epochs_256imgsize_8batchsize_dicefocalloss vis_dir: vis2\nometa_newUNetTrans_Harvey_0.001lr_linearlrpolicy_300epochs_256imgsize_8batchsize_dicefocalloss loading last checkpoint...
+Eval Historical_best_acc = 0.4080 (at epoch 266)
+
+Begin evaluation...
+Is_training: False. [1,6],  running_mf1: 0.34496
+acc: 0.93713 miou: 0.30026 mf1: 0.33784 iou_0: 0.56510 iou_1: 0.00000 iou_2: 0.00000 iou_3: 0.00000 iou_4: 0.93620 F1_0: 0.72213 F1_1: 0.00000 F1_2: 0.00000 F1_3: 0.00000 F1_4: 0.96705 precision_0: 0.81455 precision_1: 0.00000 precision_2: 0.00000 precision_3: 0.00000 precision_4: 0.94905 recall_0: 0.64854 recall_1: 0.00000 recall_2: 0.00000 recall_3: 0.00000 recall_4: 0.98574 
+
+================ (Sat Mar  9 21:58:09 2024) ================
+gpu_ids: [0] project_name: nometa_newUNetTrans_Harvey_0.001lr_linearlrpolicy_300epochs_256imgsize_8batchsize_dicefocalloss print_models: False num_workers: 4 dataset: HarveyDataset data_name: Harvey batch_size: 8 split: test img_size: 256 n_class: 5 net_G: newUNetTrans checkpoint_name: best_ckpt.pt checkpoint_dir: checkpoints\nometa_newUNetTrans_Harvey_0.001lr_linearlrpolicy_300epochs_256imgsize_8batchsize_dicefocalloss vis_dir: vis2\nometa_newUNetTrans_Harvey_0.001lr_linearlrpolicy_300epochs_256imgsize_8batchsize_dicefocalloss loading last checkpoint...
+Eval Historical_best_acc = 0.4080 (at epoch 266)
+
+Begin evaluation...
+Is_training: False. [1,6],  running_mf1: 0.34496
+acc: 0.93713 miou: 0.30026 mf1: 0.33784 iou_0: 0.56510 iou_1: 0.00000 iou_2: 0.00000 iou_3: 0.00000 iou_4: 0.93620 F1_0: 0.72213 F1_1: 0.00000 F1_2: 0.00000 F1_3: 0.00000 F1_4: 0.96705 precision_0: 0.81455 precision_1: 0.00000 precision_2: 0.00000 precision_3: 0.00000 precision_4: 0.94905 recall_0: 0.64854 recall_1: 0.00000 recall_2: 0.00000 recall_3: 0.00000 recall_4: 0.98574 
+
+================ (Sat Mar  9 21:58:53 2024) ================
+gpu_ids: [0] project_name: nometa_newUNetTrans_Harvey_0.001lr_linearlrpolicy_300epochs_256imgsize_8batchsize_dicefocalloss print_models: False num_workers: 4 dataset: HarveyDataset data_name: Harvey batch_size: 8 split: test img_size: 256 n_class: 5 net_G: newUNetTrans checkpoint_name: best_ckpt.pt checkpoint_dir: checkpoints\nometa_newUNetTrans_Harvey_0.001lr_linearlrpolicy_300epochs_256imgsize_8batchsize_dicefocalloss vis_dir: vis2\nometa_newUNetTrans_Harvey_0.001lr_linearlrpolicy_300epochs_256imgsize_8batchsize_dicefocalloss loading last checkpoint...
+Eval Historical_best_acc = 0.4080 (at epoch 266)
+
+Begin evaluation...
+Is_training: False. [1,6],  running_mf1: 0.34496
+acc: 0.93713 miou: 0.30026 mf1: 0.33784 iou_0: 0.56510 iou_1: 0.00000 iou_2: 0.00000 iou_3: 0.00000 iou_4: 0.93620 F1_0: 0.72213 F1_1: 0.00000 F1_2: 0.00000 F1_3: 0.00000 F1_4: 0.96705 precision_0: 0.81455 precision_1: 0.00000 precision_2: 0.00000 precision_3: 0.00000 precision_4: 0.94905 recall_0: 0.64854 recall_1: 0.00000 recall_2: 0.00000 recall_3: 0.00000 recall_4: 0.98574 
+

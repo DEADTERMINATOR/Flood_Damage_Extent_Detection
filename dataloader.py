@@ -237,11 +237,15 @@ class HarveyData(Dataset):
         stream_elev_829 = self.stream_elev_829[idx]
         stream_elev_830 = self.stream_elev_830[idx]
             
+        #These are the normalization values used by the pretrained weights in DeepLabv3
+        mean_normalize_rgb_channels = [0.485, 0.456, 0.406]
+        std_normalize_rgb_channels = [0.229, 0.224, 0.225]
+        
         image_transforms = v2.Compose([
                            v2.ToImage(),
                            v2.ToDtype(torch.float32, scale=True),
                            v2.Resize((self.image_size, self.image_size), antialias=True),
-                           v2.Normalize(mean=(0.485, 0.456, 0.406), std=(0.229, 0.224, 0.225))  #These are the normalization values used by the pretrained weights in DeepLabv3
+                           v2.Normalize(mean=mean_normalize_rgb_channels, std=std_normalize_rgb_channels)
         ])
         mask_transforms = v2.Compose([
                           v2.ToImage(),
@@ -252,7 +256,11 @@ class HarveyData(Dataset):
                           v2.ToImage(),
                           v2.ToDtype(torch.float32, scale=True),
                           v2.Resize((self.image_size, self.image_size), antialias=True),
-                          v2.Grayscale()
+        ])
+        int_meta_transforms = v2.Compose([
+                              v2.ToImage(),
+                              v2.ToDtype(torch.int16, scale = True),
+                              v2.Resize((self.image_size, self.image_size), antialias=True),
         ])
         
         pre_image = image_transforms(pre_image)
@@ -282,7 +290,7 @@ class HarveyData(Dataset):
         stream_elev_830 = meta_transforms(stream_elev_830)
             
         if self.augment_data:
-            augmentation_switches = {0, 1, 2, 3, 4, 5, 6}
+            augmentation_switches = {0, 1, 2, 3}
             augment_mode_1 = np.random.choice(list(augmentation_switches))
             augmentation_switches.remove(augment_mode_1)
 
@@ -297,17 +305,17 @@ class HarveyData(Dataset):
                 #augment_mode_3 = np.random.choice(list(augmentation_switches))
                 #augmentation_switches.remove(augment_mode_3)
 
-            if augment_mode_1 or augment_mode_2 or augment_mode_3 == 0:
+            if 0 in [augment_mode_1 or augment_mode_2 or augment_mode_3]:
                 # flip image vertically
                 pre_image = vflip(pre_image)
                 post_image = vflip(post_image)
-                
+
                 elevation = vflip(elevation)
                 hand = vflip(hand)
                 imperviousness = vflip(imperviousness)
                 distance_coast = vflip(distance_coast)
                 distance_stream = vflip(distance_stream)
-                
+
                 rain_824 = vflip(rain_824)
                 rain_825 = vflip(rain_825)
                 rain_826 = vflip(rain_826)
@@ -315,7 +323,7 @@ class HarveyData(Dataset):
                 rain_828 = vflip(rain_828)
                 rain_829 = vflip(rain_829)
                 rain_830 = vflip(rain_830)
-                
+
                 stream_elev_824 = vflip(stream_elev_824)
                 stream_elev_825 = vflip(stream_elev_825)
                 stream_elev_826 = vflip(stream_elev_826)
@@ -323,19 +331,19 @@ class HarveyData(Dataset):
                 stream_elev_828 = vflip(stream_elev_828)
                 stream_elev_829 = vflip(stream_elev_829)
                 stream_elev_830 = vflip(stream_elev_830)
-                
+
                 mask = vflip(mask)
-            elif augment_mode_1 or augment_mode_2 or augment_mode_3 == 1:
+            elif 1 in [augment_mode_1 or augment_mode_2 or augment_mode_3]:
                 # flip image horizontally
                 pre_image = hflip(pre_image)
                 post_image = hflip(post_image)
-                
+
                 elevation = hflip(elevation)
                 hand = hflip(hand)
                 imperviousness = hflip(imperviousness)
                 distance_coast = hflip(distance_coast)
                 distance_stream = hflip(distance_stream)
-                
+
                 rain_824 = hflip(rain_824)
                 rain_825 = hflip(rain_825)
                 rain_826 = hflip(rain_826)
@@ -343,7 +351,7 @@ class HarveyData(Dataset):
                 rain_828 = hflip(rain_828)
                 rain_829 = hflip(rain_829)
                 rain_830 = hflip(rain_830)
-                
+
                 stream_elev_824 = hflip(stream_elev_824)
                 stream_elev_825 = hflip(stream_elev_825)
                 stream_elev_826 = hflip(stream_elev_826)
@@ -351,165 +359,72 @@ class HarveyData(Dataset):
                 stream_elev_828 = hflip(stream_elev_828)
                 stream_elev_829 = hflip(stream_elev_829)
                 stream_elev_830 = hflip(stream_elev_830)
-                
+
                 mask = hflip(mask)
-            elif augment_mode_1 or augment_mode_2 or augment_mode_3 == 2:
-                # zoom image
-                zoom = v2.RandomResizedCrop(self.size, antialias=True)
+            elif 2 in [augment_mode_1 or augment_mode_2 or augment_mode_3]:
+                # crop image
+                crop = v2.RandomResizedCrop(self.image_size, antialias=True)
 
-                pre_image = zoom(pre_image)
-                post_image = zoom(post_image)
-                
-                elevation = zoom(elevation)
-                hand = zoom(hand)
-                imperviousness = zoom(imperviousness)
-                distance_coast = zoom(distance_coast)
-                distance_stream = zoom(distance_stream)
-                
-                rain_824 = zoom(rain_824)
-                rain_825 = zoom(rain_825)
-                rain_826 = zoom(rain_826)
-                rain_827 = zoom(rain_827)
-                rain_828 = zoom(rain_828)
-                rain_829 = zoom(rain_829)
-                rain_830 = zoom(rain_830)
-                
-                stream_elev_824 = zoom(stream_elev_824)
-                stream_elev_825 = zoom(stream_elev_825)
-                stream_elev_826 = zoom(stream_elev_826)
-                stream_elev_827 = zoom(stream_elev_827)
-                stream_elev_828 = zoom(stream_elev_828)
-                stream_elev_829 = zoom(stream_elev_829)
-                stream_elev_830 = zoom(stream_elev_830)
-                
-                mask = zoom(mask)
-            elif augment_mode_1 or augment_mode_2 or augment_mode_3 == 3:
-                # modify gamma
-                min_gamma = 0.25
-                gamma_range = 2.25
-                gamma = gamma_range * np.random.random() + min_gamma
+                pre_image = crop(pre_image)
+                post_image = crop(post_image)
 
-                pre_image = adjust_gamma(pre_image, gamma)
-                post_image = adjust_gamma(post_image, gamma)
-                
-                elevation = adjust_gamma(elevation)
-                hand = adjust_gamma(hand)
-                imperviousness = adjust_gamma(imperviousness)
-                distance_coast = adjust_gamma(distance_coast)
-                distance_stream = adjust_gamma(distance_stream)
-                
-                rain_824 = adjust_gamma(rain_824)
-                rain_825 = adjust_gamma(rain_825)
-                rain_826 = adjust_gamma(rain_826)
-                rain_827 = adjust_gamma(rain_827)
-                rain_828 = adjust_gamma(rain_828)
-                rain_829 = adjust_gamma(rain_829)
-                rain_830 = adjust_gamma(rain_830)
-                
-                stream_elev_824 = adjust_gamma(stream_elev_824)
-                stream_elev_825 = adjust_gamma(stream_elev_825)
-                stream_elev_826 = adjust_gamma(stream_elev_826)
-                stream_elev_827 = adjust_gamma(stream_elev_827)
-                stream_elev_828 = adjust_gamma(stream_elev_828)
-                stream_elev_829 = adjust_gamma(stream_elev_829)
-                stream_elev_830 = adjust_gamma(stream_elev_830)
-                
-                mask = adjust_gamma(mask, gamma)
-            elif augment_mode_1 or augment_mode_2 or augment_mode_3 == 4:
-                # perform elastic transformation
-                elastic = v2.ElasticTransform(sigma=10)
+                elevation = crop(elevation)
+                hand = crop(hand)
+                imperviousness = crop(imperviousness)
+                distance_coast = crop(distance_coast)
+                distance_stream = crop(distance_stream)
 
-                pre_image = elastic(pre_image)
-                post_image = elastic(post_image)
-                
-                elevation = elastic(elevation)
-                hand = elastic(hand)
-                imperviousness = elastic(imperviousness)
-                distance_coast = elastic(distance_coast)
-                distance_stream = elastic(distance_stream)
-                
-                rain_824 = elastic(rain_824)
-                rain_825 = elastic(rain_825)
-                rain_826 = elastic(rain_826)
-                rain_827 = elastic(rain_827)
-                rain_828 = elastic(rain_828)
-                rain_829 = elastic(rain_829)
-                rain_830 = elastic(rain_830)
-                
-                stream_elev_824 = elastic(stream_elev_824)
-                stream_elev_825 = elastic(stream_elev_825)
-                stream_elev_826 = elastic(stream_elev_826)
-                stream_elev_827 = elastic(stream_elev_827)
-                stream_elev_828 = elastic(stream_elev_828)
-                stream_elev_829 = elastic(stream_elev_829)
-                stream_elev_830 = elastic(stream_elev_830)
-                
-                mask = elastic(mask)
-            elif augment_mode_1 or augment_mode_2 or augment_mode_3 == 5:
-                # modify brightness/contrast/saturation/hue
-                jitter = v2.ColorJitter(brightness=0.25, contrast=0.25, saturation=0.25, hue=0.25)
+                rain_824 = crop(rain_824)
+                rain_825 = crop(rain_825)
+                rain_826 = crop(rain_826)
+                rain_827 = crop(rain_827)
+                rain_828 = crop(rain_828)
+                rain_829 = crop(rain_829)
+                rain_830 = crop(rain_830)
 
-                pre_image = jitter(pre_image)
-                post_image = jitter(post_image)
-                
-                elevation = jitter(elevation)
-                hand = jitter(hand)
-                imperviousness = jitter(imperviousness)
-                distance_coast = jitter(distance_coast)
-                distance_stream = jitter(distance_stream)
-                
-                rain_824 = jitter(rain_824)
-                rain_825 = jitter(rain_825)
-                rain_826 = jitter(rain_826)
-                rain_827 = jitter(rain_827)
-                rain_828 = jitter(rain_828)
-                rain_829 = jitter(rain_829)
-                rain_830 = jitter(rain_830)
-                
-                stream_elev_824 = jitter(stream_elev_824)
-                stream_elev_825 = jitter(stream_elev_825)
-                stream_elev_826 = jitter(stream_elev_826)
-                stream_elev_827 = jitter(stream_elev_827)
-                stream_elev_828 = jitter(stream_elev_828)
-                stream_elev_829 = jitter(stream_elev_829)
-                stream_elev_830 = jitter(stream_elev_830)
-                
-                mask = jitter(mask)
-            elif augment_mode_1 or augment_mode_2 or augment_mode_3 == 6:
+                stream_elev_824 = crop(stream_elev_824)
+                stream_elev_825 = crop(stream_elev_825)
+                stream_elev_826 = crop(stream_elev_826)
+                stream_elev_827 = crop(stream_elev_827)
+                stream_elev_828 = crop(stream_elev_828)
+                stream_elev_829 = crop(stream_elev_829)
+                stream_elev_830 = crop(stream_elev_830)
+
+                mask = crop(mask)
+            elif 3 in [augment_mode_1 or augment_mode_2 or augment_mode_3]:
                 # rotate image
                 random_degree = random.randint(1, 359)
 
                 pre_image = rotate(pre_image, random_degree)
                 post_image = rotate(post_image, random_degree)
-                
+
                 elevation = rotate(elevation, random_degree)
                 hand = rotate(hand, random_degree)
                 imperviousness = rotate(imperviousness, random_degree)
-                distance_coast = rotate(distance_coast)
-                distance_stream = rotate(distance_stream)
-                
-                rain_824 = rotate(rain_824)
-                rain_825 = rotate(rain_825)
-                rain_826 = rotate(rain_826)
-                rain_827 = rotate(rain_827)
-                rain_828 = rotate(rain_828)
-                rain_829 = rotate(rain_829)
-                rain_830 = rotate(rain_830)
-                
-                stream_elev_824 = rotate(stream_elev_824)
-                stream_elev_825 = rotate(stream_elev_825)
-                stream_elev_826 = rotate(stream_elev_826)
-                stream_elev_827 = rotate(stream_elev_827)
-                stream_elev_828 = rotate(stream_elev_828)
-                stream_elev_829 = rotate(stream_elev_829)
-                stream_elev_830 = rotate(stream_elev_830)
-                
+                distance_coast = rotate(distance_coast, random_degree)
+                distance_stream = rotate(distance_stream, random_degree)
+
+                rain_824 = rotate(rain_824, random_degree)
+                rain_825 = rotate(rain_825, random_degree)
+                rain_826 = rotate(rain_826, random_degree)
+                rain_827 = rotate(rain_827, random_degree)
+                rain_828 = rotate(rain_828, random_degree)
+                rain_829 = rotate(rain_829, random_degree)
+
+                stream_elev_824 = rotate(stream_elev_824, random_degree)
+                stream_elev_825 = rotate(stream_elev_825, random_degree)
+                stream_elev_826 = rotate(stream_elev_826, random_degree)
+                stream_elev_827 = rotate(stream_elev_827, random_degree)
+                stream_elev_828 = rotate(stream_elev_828, random_degree)
+                stream_elev_829 = rotate(stream_elev_829, random_degree)
+                stream_elev_830 = rotate(stream_elev_830, random_degree)
+
                 mask = rotate(mask, random_degree)
                 
         #Concatenate the pre and post disaster images, as well as the meta-attributes, together along the channel dimension.
-        combined_image = torch.cat([pre_image, post_image, elevation, """hand""", imperviousness, distance_coast, distance_stream], dim=0)
-                                    #rain_824, rain_825, rain_826, rain_827, rain_828, rain_829, rain_830], dim=0)
-                                    #stream_elev_824, stream_elev_825, stream_elev_826, stream_elev_827, stream_elev_828, stream_elev_829, stream_elev_830], dim=0)
+        combined_image = torch.cat([pre_image, post_image, elevation, hand, imperviousness, distance_coast, distance_stream,
+                                    rain_824, rain_825, rain_826, rain_827, rain_828, rain_829, rain_830,
+                                    stream_elev_824, stream_elev_825, stream_elev_826, stream_elev_827, stream_elev_828, stream_elev_829, stream_elev_830], dim=0)
         return combined_image, mask
         
     def get_item_resize_only(self, idx, image_size):
@@ -521,6 +436,24 @@ class HarveyData(Dataset):
         elevation = self.elevation[idx]
         hand = self.hand[idx]
         imperviousness = self.imperviousness[idx]
+        distance_coast = self.distance_coast[idx]
+        distance_stream = self.distance_stream[idx]
+        
+        rain_824 = self.rain_824[idx]
+        rain_825 = self.rain_825[idx]
+        rain_826 = self.rain_826[idx]
+        rain_827 = self.rain_827[idx]
+        rain_828 = self.rain_828[idx]
+        rain_829 = self.rain_829[idx]
+        rain_830 = self.rain_830[idx]
+        
+        stream_elev_824 = self.stream_elev_824[idx]
+        stream_elev_825 = self.stream_elev_825[idx]
+        stream_elev_826 = self.stream_elev_826[idx]
+        stream_elev_827 = self.stream_elev_827[idx]
+        stream_elev_828 = self.stream_elev_828[idx]
+        stream_elev_829 = self.stream_elev_829[idx]
+        stream_elev_830 = self.stream_elev_830[idx]
             
         #Convert image to normalized tensor.
         pre_image = to_tensor(pre_image)

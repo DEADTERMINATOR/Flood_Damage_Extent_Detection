@@ -2,8 +2,8 @@ import rasterio
 import numpy as np
 import os
 
-pde_label_paths = 'dataset/testing/PDE_labels'
-pre_msk_paths = 'dataset/testing/pre_msk'
+pde_label_paths = 'dataset/PDE_labels'
+pre_msk_paths = 'dataset/pre_msk'
 
 pde_label_files = os.listdir(pde_label_paths)
 cwd = os.getcwd()

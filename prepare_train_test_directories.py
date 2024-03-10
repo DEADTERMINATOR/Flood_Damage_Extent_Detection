@@ -19,6 +19,7 @@ cwd = os.getcwd()
 pre_img_path = 'dataset\pre_img'
 post_img_path = 'dataset\post_img'
 pde_labels_path = 'dataset\PDE_labels'
+pre_msk_path = 'dataset\pre_msk'
 
 elevation_path = 'dataset\elevation'
 hand_path = 'dataset\hand'
@@ -45,6 +46,7 @@ stream_elev_830_path = 'dataset\stream_elev_830'
 pre_img_train_path = r'dataset\training\pre_img'
 post_img_train_path = r'dataset\training\post_img'
 pde_labels_train_path = r'dataset\training\PDE_labels'
+pre_msk_train_path = r'dataset\training\pre_msk'
 
 elevation_train_path = r'dataset\training\elevation'
 hand_train_path = r'dataset\training\hand'
@@ -71,6 +73,7 @@ stream_elev_830_train_path = r'dataset\training\stream_elev\830'
 pre_img_test_path = r'dataset\testing\pre_img'
 post_img_test_path = r'dataset\testing\post_img'
 pde_labels_test_path = r'dataset\testing\PDE_labels'
+pre_msk_test_path = r'dataset\testing\pre_msk'
 
 elevation_test_path = r'dataset\testing\elevation'
 hand_test_path = r'dataset\testing\hand'
@@ -94,6 +97,33 @@ stream_elev_828_test_path = r'dataset\testing\stream_elev\828'
 stream_elev_829_test_path = r'dataset\testing\stream_elev\829'
 stream_elev_830_test_path = r'dataset\testing\stream_elev\830'
 
+pre_img_val_path = r'dataset\val\pre_img'
+post_img_val_path = r'dataset\val\post_img'
+pde_labels_val_path = r'dataset\val\PDE_labels'
+pre_msk_val_path = r'dataset\val\pre_msk'
+
+elevation_val_path = r'dataset\val\elevation'
+hand_val_path = r'dataset\val\hand'
+imperviousness_val_path = r'dataset\val\imperviousness'
+distance_to_coast_val_path = r'dataset\val\distance_to_coast'
+distance_to_stream_val_path = r'dataset\val\distance_to_stream'
+
+rain_824_val_path = r'dataset\val\rain\824'
+rain_825_val_path = r'dataset\val\rain\825'
+rain_826_val_path = r'dataset\val\rain\826'
+rain_827_val_path = r'dataset\val\rain\827'
+rain_828_val_path = r'dataset\val\rain\828'
+rain_829_val_path = r'dataset\val\rain\829'
+rain_830_val_path = r'dataset\val\rain\830'
+
+stream_elev_824_val_path = r'dataset\val\stream_elev\824'
+stream_elev_825_val_path = r'dataset\val\stream_elev\825'
+stream_elev_826_val_path = r'dataset\val\stream_elev\826'
+stream_elev_827_val_path = r'dataset\val\stream_elev\827'
+stream_elev_828_val_path = r'dataset\val\stream_elev\828'
+stream_elev_829_val_path = r'dataset\val\stream_elev\829'
+stream_elev_830_val_path = r'dataset\val\stream_elev\830'
+
 removals = [0, 1, 2, 3, 4, 5, 6, 7, 8, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 27, 28, 29, 33, 34, 35, 43, 44, 48, 49, 50,
             59, 63, 64, 65, 69, 83, 84, 85, 86, 99, 100, 113, 114, 115, 116, 117, 120, 130, 131, 132, 135, 136, 137, 138,
             150, 151, 152, 153, 165, 166, 167, 168, 180, 181, 182, 183, 190, 191, 192, 193, 194, 195, 196, 197, 198, 207,
@@ -107,21 +137,25 @@ removals = [0, 1, 2, 3, 4, 5, 6, 7, 8, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 2
             481, 482, 483, 484, 494, 495, 496, 506, 507, 508, 518, 519, 520, 532, 533, 534, 535, 536, 540, 541, 542, 543, 544, 545,
             546, 547, 548, 549, 553, 554, 555, 556, 557, 558, 559, 569, 570, 571, 572, 584, 585, 591, 592, 595, 596, 597, 598]
 
-removal_directories = [pre_img_path, post_img_path, pde_labels_path, elevation_path, hand_path, imperviousness_path, distance_to_coast_path, distance_to_stream_path,
-                       rain_824_path, rain_825_path, rain_826_path, rain_827_path, rain_828_path, rain_829_path, rain_830_path,
-                       stream_elev_824_path, stream_elev_825_path, stream_elev_826_path, stream_elev_827_path, stream_elev_828_path, stream_elev_829_path, stream_elev_830_path]
+#removal_directories = [pre_img_path, post_img_path, pde_labels_path, elevation_path, hand_path, imperviousness_path, distance_to_coast_path, distance_to_stream_path,
+#                       rain_824_path, rain_825_path, rain_826_path, rain_827_path, rain_828_path, rain_829_path, rain_830_path,
+#                       stream_elev_824_path, stream_elev_825_path, stream_elev_826_path, stream_elev_827_path, stream_elev_828_path, stream_elev_829_path, stream_elev_830_path]
 
-move_directories = [pre_img_path, post_img_path, pde_labels_path, elevation_path, hand_path, imperviousness_path, distance_to_coast_path, distance_to_stream_path,
+move_directories = [pre_img_path, post_img_path, pde_labels_path, pre_msk_path, elevation_path, hand_path, imperviousness_path, distance_to_coast_path, distance_to_stream_path,
                     rain_824_path, rain_825_path, rain_826_path, rain_827_path, rain_828_path, rain_829_path, rain_830_path,
                     stream_elev_824_path, stream_elev_825_path, stream_elev_826_path, stream_elev_827_path, stream_elev_828_path, stream_elev_829_path, stream_elev_830_path]
 
-train_directories = [pre_img_train_path, post_img_train_path, pde_labels_train_path, elevation_train_path, hand_train_path, imperviousness_train_path, distance_to_coast_train_path, distance_to_stream_train_path,
-                    rain_824_train_path, rain_825_train_path, rain_826_train_path, rain_827_train_path, rain_828_train_path, rain_829_train_path, rain_830_train_path,
-                    stream_elev_824_train_path, stream_elev_825_train_path, stream_elev_826_train_path, stream_elev_827_train_path, stream_elev_828_train_path, stream_elev_829_train_path, stream_elev_830_train_path]
+train_directories = [pre_img_train_path, post_img_train_path, pde_labels_train_path, pre_msk_train_path, elevation_train_path, hand_train_path, imperviousness_train_path, distance_to_coast_train_path, distance_to_stream_train_path,
+                     rain_824_train_path, rain_825_train_path, rain_826_train_path, rain_827_train_path, rain_828_train_path, rain_829_train_path, rain_830_train_path,
+                     stream_elev_824_train_path, stream_elev_825_train_path, stream_elev_826_train_path, stream_elev_827_train_path, stream_elev_828_train_path, stream_elev_829_train_path, stream_elev_830_train_path]
 
-test_directories = [pre_img_test_path, post_img_test_path, pde_labels_test_path, elevation_test_path, hand_test_path, imperviousness_test_path, distance_to_coast_test_path, distance_to_stream_test_path,
+test_directories = [pre_img_test_path, post_img_test_path, pde_labels_test_path, pre_msk_test_path, elevation_test_path, hand_test_path, imperviousness_test_path, distance_to_coast_test_path, distance_to_stream_test_path,
                     rain_824_test_path, rain_825_test_path, rain_826_test_path, rain_827_test_path, rain_828_test_path, rain_829_test_path, rain_830_test_path,
                     stream_elev_824_test_path, stream_elev_825_test_path, stream_elev_826_test_path, stream_elev_827_test_path, stream_elev_828_test_path, stream_elev_829_test_path, stream_elev_830_test_path]
+
+val_directories = [pre_img_val_path, post_img_val_path, pde_labels_val_path, pre_msk_val_path, elevation_val_path, hand_val_path, imperviousness_val_path, distance_to_coast_val_path, distance_to_stream_val_path,
+                   rain_824_val_path, rain_825_val_path, rain_826_val_path, rain_827_val_path, rain_828_val_path, rain_829_val_path, rain_830_val_path,
+                   stream_elev_824_val_path, stream_elev_825_val_path, stream_elev_826_val_path, stream_elev_827_val_path, stream_elev_828_val_path, stream_elev_829_val_path, stream_elev_830_val_path]
 
 delete_files = True
 generate_new_test_indices = False
@@ -129,28 +163,41 @@ move_files_to_train_test = True
 
 with open('log.txt', 'w') as log:
     if (delete_files):
-        for i in range(len(removal_directories)):
-            all_files = sorted(os.listdir(os.path.join(cwd, removal_directories[i])), key=extract_numbers)
+        for i in range(len(move_directories)):
+            all_files = sorted(os.listdir(os.path.join(cwd, move_directories[i])), key=extract_numbers)
             file_count = len(all_files)
 
             for j in range(file_count):
-                if j in removals and os.path.exists(os.path.join(cwd, removal_directories[i], all_files[j])):
+                if j in removals and os.path.exists(os.path.join(cwd, move_directories[i], all_files[j])):
                     print(f"Deleting: {all_files[j]}")
                     log.write(f"Deleting: {all_files[j]}\n")
-                    os.remove(os.path.join(cwd, removal_directories[i], all_files[j]))
+                    os.remove(os.path.join(cwd, move_directories[i], all_files[j]))
 
     if (generate_new_test_indices):
+        file_count = len(os.listdir(os.path.join(cwd, move_directories[0])))
+        test_val_random_indices = random.sample(range(file_count), int(file_count * 0.3))
+        
+        midpoint = len(test_val_random_indices) // 2 #Split the list into two lists, one for validation and one for testing.
+        test_random_indices = test_val_random_indices[:midpoint]
+        val_random_indices = test_val_random_indices[midpoint:]
+        
         with open('test_indices.txt', 'w') as indices:
-            file_count = len(os.listdir(os.path.join(cwd, move_directories[0])))
-            test_random_indices = random.sample(range(file_count), int(file_count * 0.2) + 2) #Add 2 to produce training and test counts that are compatible with a batch size of 8.
             for i in test_random_indices:
+                indices.write(str(i) + "\n")
+        with open('val_indices.txt', 'w') as indices:
+            for i in val_random_indices:
                 indices.write(str(i) + "\n")
         
     if (move_files_to_train_test):
         test_random_indices = []
+        val_random_indices = []
+        
         with open('test_indices.txt', 'r') as indices:
-            for index in indices:
-                test_random_indices.append(int(index.strip()))
+            for i in indices:
+                test_random_indices.append(int(i.strip()))
+        with open('val_indices.txt', 'r') as indices:
+            for i in indices:
+                val_random_indices.append(int(i.strip()))
     
         for i in range(len(move_directories)):
             all_files = sorted(os.listdir(os.path.join(cwd, move_directories[i])), key=extract_numbers)
@@ -161,6 +208,10 @@ with open('log.txt', 'w') as log:
                     print(f"Moving: {all_files[j]} to {test_directories[i]}")
                     log.write(f"Moving: {all_files[j]} to {test_directories[i]}\n")
                     shutil.move(os.path.join(cwd, move_directories[i], all_files[j]), os.path.join(cwd, test_directories[i]))
+                elif j in val_random_indices and os.path.exists(os.path.join(cwd, val_directories[i])):
+                    print(f"Moving: {all_files[j]} to {val_directories[i]}")
+                    log.write(f"Moving: {all_files[j]} to {val_directories[i]}\n")
+                    shutil.move(os.path.join(cwd, move_directories[i], all_files[j]), os.path.join(cwd, val_directories[i]))
                 elif os.path.exists(os.path.join(cwd, train_directories[i])):
                     print(f"Moving: {all_files[j]} to {train_directories[i]}")
                     log.write(f"Moving: {all_files[j]} to {train_directories[i]}\n")
