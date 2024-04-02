@@ -22,7 +22,7 @@ def test(args):
     from models.evaluator import CDEvaluator
     dataloaders = utils.get_loader(args.data_name, img_size=args.img_size,
                                   batch_size=args.batch_size, is_train=False,
-                                  split='test', dataset='HarveyDataset')
+                                  split='test', dataset='HarveyDataset', diff_block=args.diff_block)
     model = CDEvaluator(args=args, dataloader=dataloaders)
 
     model.eval_models()
@@ -55,6 +55,7 @@ if __name__ == '__main__':
                              'base_transformer_pos_s4_dd8 | '
                              'base_transformer_pos_s4_dd8_dedim8|')
     parser.add_argument('--loss', default='ce', type=str)
+    parser.add_argument('--diff_block', default=0, type=int)
 
     # optimizer
     parser.add_argument('--optimizer', default='sgd', type=str)

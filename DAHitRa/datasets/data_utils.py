@@ -263,58 +263,53 @@ class CDDataAugmentation_Harvey:
         self.with_random_rot = with_random_rot
         self.with_random_crop = with_random_crop  
      
-    def transform(self, imgs, labels, attributes=None, is_train=True):
-        #imgs = [TF.to_pil_image(img) for img in imgs]
-        #labels = [TF.to_pil_image(label) for label in labels]
-        #attributes = {att_name: TF.to_pil_image(att) for att_name, att in attributes.items()}        
-        
+    def transform(self, imgs, labels, diff_block=0, attributes=None, is_train=True):
         imgs = [TF.to_tensor(img) for img in imgs]
-        labels = [torch.from_numpy(np.array(img, np.uint8)).unsqueeze(dim=0) for img in labels]
-        attributes = {att_name: torch.from_numpy(att) for att_name, att in attributes.items()}
-        
+        labels = [torch.from_numpy(np.array(label, np.uint8)).unsqueeze(dim=0) for label in labels]
+        attributes = {att_name: torch.from_numpy(np.array(att, np.float32)) for att_name, att in attributes.items()}
+
         imgs = [TF.resize(img, (self.img_size, self.img_size)) for img in imgs]
         labels = [TF.resize(label, (self.img_size, self.img_size)) for label in labels]
-        attributes = {att_name: TF.resize(att, (self.img_size, self.img_size)) for att_name, att in attributes.items()}
-        
-        imgs[0] = torch.cat((imgs[0], attributes["elevation"], attributes["imperviousness"], attributes["hand"], attributes["dist_coast"], attributes["dist_stream"],
-                             attributes["rain_824"], attributes["rain_825"], attributes["rain_826"], attributes["rain_827"], attributes["rain_828"], attributes["rain_829"], attributes["rain_830"],
-                             attributes["stream_elev_824"], attributes["stream_elev_825"], attributes["stream_elev_826"], attributes["stream_elev_827"], attributes["stream_elev_828"], attributes["stream_elev_829"], attributes["stream_elev_830"]), dim=0)
-        imgs[1] = torch.cat((imgs[1], attributes["elevation"], attributes["imperviousness"], attributes["hand"], attributes["dist_coast"], attributes["dist_stream"],
-                             attributes["rain_824"], attributes["rain_825"], attributes["rain_826"], attributes["rain_827"], attributes["rain_828"], attributes["rain_829"], attributes["rain_830"],
-                             attributes["stream_elev_824"], attributes["stream_elev_825"], attributes["stream_elev_826"], attributes["stream_elev_827"], attributes["stream_elev_828"], attributes["stream_elev_829"], attributes["stream_elev_830"]), dim=0)
-        
-        random_base = 0.5
-        if self.with_random_hflip and random.random() > 0.5:
-            imgs = [TF.hflip(img) for img in imgs]
-            labels = [TF.hflip(img) for img in labels]
+        attributes = {att_name: TF.resize(att, (self.img_size, self.img_size)) for att_name, att in attributes.items()}                   
 
-        if self.with_random_vflip and random.random() > 0.5:
+        random_base = 0.5
+        if self.with_random_hflip and random.random() > random_base:
+            imgs = [TF.hflip(img) for img in imgs]
+            labels = [TF.hflip(label) for label in labels]
+            attributes = {att_name: TF.hflip(att) for att_name, att in attributes.items()}
+
+        if self.with_random_vflip and random.random() > random_base:
             imgs = [TF.vflip(img) for img in imgs]
-            labels = [TF.vflip(img) for img in labels]
+            labels = [TF.vflip(label) for label in labels]
+            attributes = {att_name: TF.vflip(att) for att_name, att in attributes.items()}
 
         if self.with_random_rot and random.random() > random_base:
-            angles = [90, 180, 270]
-            index = random.randint(0, 2)
-            angle = angles[index]
+            angle = random.choice([90, 180, 270])
             imgs = [TF.rotate(img, angle) for img in imgs]
-            labels = [TF.rotate(img, angle) for img in labels]
+            labels = [TF.rotate(label, angle) for label in labels]
+            attributes = {att_name: TF.rotate(att, angle) for att_name, att in attributes.items()}
 
-        if self.with_random_crop and random.random() > 0:
-            i, j, h, w = transforms.RandomResizedCrop(size=self.img_size). \
-                get_params(img=imgs[0], scale=(0.8, 1.0), ratio=(1, 1))
+        if self.with_random_crop and random.random() > random_base:
+            i, j, h, w = transforms.RandomResizedCrop.get_params(imgs[0], scale=(0.8, 1.0), ratio=(1, 1))
+            imgs = [TF.resized_crop(img, i, j, h, w, size=(self.img_size, self.img_size), interpolation=TF.InterpolationMode.BICUBIC) for img in imgs]
+            labels = [TF.resized_crop(label, i, j, h, w, size=(self.img_size, self.img_size), interpolation=TF.InterpolationMode.NEAREST) for label in labels]
+            attributes = {att_name: TF.resized_crop(att, i, j, h, w, size=(self.img_size, self.img_size), interpolation=TF.InterpolationMode.BICUBIC) for att_name, att in attributes.items()}
 
-            imgs = [TF.resized_crop(img, i, j, h, w,
-                                    size=(self.img_size, self.img_size),
-                                    interpolation=TF.InterpolationMode.BICUBIC)
-                    for img in imgs]
+        imgs = [TF.normalize(img, mean=[0.5, 0.5, 0.5], std=[0.5, 0.5, 0.5]) for img in imgs]
+        attributes = {att_name: TF.normalize(att, mean=[0.5], std=[0.5]) for att_name, att in attributes.items()}
 
-            labels = [TF.resized_crop(img, i, j, h, w,
-                                      size=(self.img_size, self.img_size),
-                                      interpolation=TF.InterpolationMode.NEAREST)
-                      for img in labels]
-        
-        imgs = [TF.normalize(img[0:3], mean=[0.5, 0.5, 0.5],std=[0.5, 0.5, 0.5]) for img in imgs]
-        return imgs, labels
+        attr = None
+        if diff_block == 1 or diff_block == 3:
+            attr = torch.stack([attributes[att_name] for att_name in attributes], dim=0).squeeze(1)  # Stacking along a new dimension
+        elif diff_block == 2:
+            imgs[0] = torch.cat([imgs[0], attributes["elevation"], attributes["imperviousness"], attributes["hand"], attributes["dist_coast"], attributes["dist_stream"]], dim=0)
+            imgs[1] = torch.cat([imgs[1], attributes["rain_824"], attributes["rain_825"], attributes["rain_826"], attributes["rain_827"], attributes["rain_828"], attributes["rain_829"], attributes["rain_830"],
+                                  attributes["stream_elev_824"], attributes["stream_elev_825"], attributes["stream_elev_826"], attributes["stream_elev_827"], attributes["stream_elev_828"], attributes["stream_elev_829"], attributes["stream_elev_830"]], dim=0)
+            
+        if diff_block == 1 or diff_block == 3:
+            return imgs, attr, labels
+        else:
+            return imgs, labels
         
     
 def pil_crop(image, box, cropsize, default_value):

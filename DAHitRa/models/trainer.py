@@ -48,6 +48,9 @@ class CDTrainer():
         self.exp_lr_scheduler_G = get_scheduler(self.optimizer_G, args)
 
         self.running_metric = ConfuseMatrixMeter(n_class=self.n_class)
+        
+        # Which difference block style to use
+        self.diff_block = args.diff_block
 
         # define logger file
         logger_path = os.path.join(args.checkpoint_dir, 'log.txt')
@@ -287,7 +290,15 @@ class CDTrainer():
         self.batch = batch
         img_in1 = batch['A'].to(self.device)
         img_in2 = batch['B'].to(self.device)
-        self.G_pred = self.net_G(img_in1, img_in2)
+        self.G_pred = self.net_G(img_in1, img_in2, diff_block=self.diff_block)
+        self.G_final_pred = self.G_pred
+        
+    def _forward_pass_attr(self, batch):
+        self.batch = batch
+        img_in1 = batch['A'].to(self.device)
+        img_in2 = batch['B'].to(self.device)
+        attributes = batch['C'].to(self.device)
+        self.G_pred = self.net_G(img_in1, img_in2, attributes, self.diff_block)
         self.G_final_pred = self.G_pred
 
     def _backward_G(self):
@@ -363,7 +374,10 @@ class CDTrainer():
             # Iterate over data.
             self.logger.write('lr: %0.7f\n' % self.optimizer_G.param_groups[0]['lr'])
             for self.batch_id, batch in enumerate(self.dataloaders['train'], 0):
-                self._forward_pass(batch)
+                if self.diff_block == 0 or self.diff_block == 2:
+                    self._forward_pass(batch)
+                else:
+                    self._forward_pass_attr(batch)
                 # update G
                 self.optimizer_G.zero_grad()
                 self._backward_G()
@@ -387,7 +401,10 @@ class CDTrainer():
             # Iterate over data.
             for self.batch_id, batch in enumerate(self.dataloaders['val'], 0):
                 with torch.no_grad():
-                    self._forward_pass(batch)
+                    if self.diff_block == 0 or self.diff_block == 2:
+                        self._forward_pass(batch)
+                    else:
+                        self._forward_pass_attr(batch)
                 self._collect_running_batch_states()
             self._collect_epoch_states()
 

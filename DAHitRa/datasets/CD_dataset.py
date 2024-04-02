@@ -380,11 +380,12 @@ class HarveyDataset(ImageDataset):
             
 
     def __init__(self, root_dir, img_size, split='train', is_train=True,
-                 to_tensor=True, load_meta_attributes_upfront=False):
+                 to_tensor=True, load_meta_attributes_upfront=False, diff_block=0):
         super(HarveyDataset, self).__init__(root_dir, img_size=img_size, split=split, is_train=is_train,
                                         to_tensor=to_tensor)
         self.split = split
         self.load_meta_attributes_upfront = load_meta_attributes_upfront
+        self.diff_block = diff_block
         
         self.label_img_name_list = os.listdir(os.path.join(self.root_dir, split, 'PDE_labels'))
         self.elevation_img_name_list = os.listdir(os.path.join(self.root_dir, split, 'elevation'))
@@ -463,6 +464,7 @@ class HarveyDataset(ImageDataset):
                 img_size=self.img_size,
                 with_random_hflip=True,
                 with_random_vflip=True,
+                with_random_rot=True,
                 with_random_crop=True
             )
         else:
@@ -508,6 +510,10 @@ class HarveyDataset(ImageDataset):
         """
         attribute_dict = self.load_meta_attributes_by_index(index)
             
-        [img, img_B], [label] = self.augm.transform([img, img_B], [label], attribute_dict)
-        # [img, img_B], [label] = self.augm.transform([img, img_B], [label], to_tensor=self.to_tensor, split=self.split)
-        return {'name': name, 'A': img, 'B': img_B, 'L': label}
+        if self.diff_block == 1 or self.diff_block == 3:
+            [img, img_B], attributes, [label] = self.augm.transform(imgs=[img, img_B], labels=[label], attributes=attribute_dict, diff_block=self.diff_block)
+            return {'name': name, 'A': img, 'B': img_B, 'C': attributes, 'L': label}
+        else:
+            [img, img_B], [label] = self.augm.transform(imgs=[img, img_B], labels=[label], attributes=attribute_dict, diff_block=self.diff_block)
+            return {'name': name, 'A': img, 'B': img_B, 'L': label}
+        
