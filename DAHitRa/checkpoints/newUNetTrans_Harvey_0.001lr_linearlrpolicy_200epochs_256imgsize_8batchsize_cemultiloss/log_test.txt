@@ -1,8 +1,0 @@
-================ (Wed Mar  6 20:11:09 2024) ================
-gpu_ids: [0] project_name: newUNetTrans_Harvey_0.001lr_linearlrpolicy_200epochs_256imgsize_8batchsize_cemultiloss checkpoint_root: checkpoints num_workers: 4 dataset: HarveyDataset data_name: Harvey batch_size: 8 split: train split_val: val img_size: 256 n_class: 5 net_G: newUNetTrans loss: ce_multi optimizer: sgd lr: 0.001 max_epochs: 200 lr_policy: linear lr_decay_iters: 100 checkpoint_dir: checkpoints\newUNetTrans_Harvey_0.001lr_linearlrpolicy_200epochs_256imgsize_8batchsize_cemultiloss vis_dir: vis\newUNetTrans_Harvey_0.001lr_linearlrpolicy_200epochs_256imgsize_8batchsize_cemultiloss loading last checkpoint...
-Eval Historical_best_acc = 0.3894 (at epoch 165)
-
-Begin evaluation...
-Is_training: False. [1,6],  running_mf1: 0.37696
-acc: 0.78018 miou: 0.27638 mf1: 0.35928 iou_0: 0.33176 iou_1: 0.12092 iou_2: 0.00595 iou_3: 0.08673 iou_4: 0.83653 F1_0: 0.49823 F1_1: 0.21574 F1_2: 0.01184 F1_3: 0.15962 F1_4: 0.91099 precision_0: 0.86903 precision_1: 0.13611 precision_2: 0.25335 precision_3: 0.08893 precision_4: 0.99015 recall_0: 0.34922 recall_1: 0.51993 recall_2: 0.00606 recall_3: 0.77847 recall_4: 0.84355 
-

@@ -181,7 +181,7 @@ if __name__ == "__main__":
         area1_elevation = 'meta_attributes\elevation\elevation_Area1_aligned.tif'
         area2_elevation = 'meta_attributes\elevation\elevation_Area2_aligned.tif'
     
-        area1_hand = r'meta_attributes\Height Above Nearest Drainage (HAND)\rem_zeroed_masked_healed_Area1_aligned.tif'
+        area1_hand = r'meta_attributes\Height Above Nearest Drainage (HAND)\rem_zeroed_masked_healed_Area1_aligned_nodatachanged.tif'
         area2_hand = r'meta_attributes\Height Above Nearest Drainage (HAND)\rem_zeroed_masked_healed_Area2_aligned.tif'
     
         area1_imperviousness = r'meta_attributes\impervious\nlcd_2016_impervious_l48_Area1_aligned.tif'
@@ -226,17 +226,17 @@ if __name__ == "__main__":
         area2_distance_to_stream = 'meta_attributes\dis_stream\distance_to_stream_Area2_aligned.tif'
         
         # Refresh area_images with the new file paths.
-        area_images = [area1_rain_824, area1_rain_825, area1_rain_826, area1_rain_827, area1_rain_828, area1_rain_829, area1_rain_830,
+        area_images = [area1_hand, area1_rain_824, area1_rain_825, area1_rain_826, area1_rain_827, area1_rain_828, area1_rain_829, area1_rain_830,
                        area1_stream_elevation_824, area1_stream_elevation_825, area1_stream_elevation_826, area1_stream_elevation_827, area1_stream_elevation_828, area1_stream_elevation_829, area1_stream_elevation_830,
-                       area2_rain_824, area2_rain_825, area2_rain_826, area2_rain_827, area2_rain_828, area2_rain_829, area2_rain_830,
+                       area2_hand, area2_rain_824, area2_rain_825, area2_rain_826, area2_rain_827, area2_rain_828, area2_rain_829, area2_rain_830,
                        area2_stream_elevation_824, area2_stream_elevation_825, area2_stream_elevation_826, area2_stream_elevation_827, area2_stream_elevation_828, area2_stream_elevation_829, area2_stream_elevation_830]
         
-        area1_images = area_images[0:14]
-        area2_images = area_images[14:28]
+        area1_images = area_images[0:15]
+        area2_images = area_images[15:29]
     
-        attributes = ['rain_824', 'rain_825', 'rain_826', 'rain_827', 'rain_828', 'rain_829', 'rain_830', 'stream_elev_824', 'stream_elev_825', 'stream_elev_826', 'stream_elev_827', 'stream_elev_828', 'stream_elev_829', 'stream_elev_830']
+        attributes = ['hand', 'rain_824', 'rain_825', 'rain_826', 'rain_827', 'rain_828', 'rain_829', 'rain_830', 'stream_elev_824', 'stream_elev_825', 'stream_elev_826', 'stream_elev_827', 'stream_elev_828', 'stream_elev_829', 'stream_elev_830']
     
-        output_dir = 'dataset'
+        output_dir = 'dataset\\'
     
         cut_images(area1_pre_image, area1_images, attributes, output_dir, 'Area_1')
         cut_images(area2_pre_image, area2_images, attributes, output_dir, 'Area_2')

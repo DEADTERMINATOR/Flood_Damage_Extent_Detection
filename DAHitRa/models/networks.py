@@ -166,7 +166,7 @@ def define_G(args, init_type='normal', init_gain=0.02, gpu_ids=[]):
     elif args.net_G == 'changeFormerV6':
        net = ChangeFormerV6()
     elif args.net_G == 'newUNetTrans':
-       net =  BASE_Transformer_UNet(input_nc=19, output_nc=5, token_len=4, resnet_stages_num=4,
+       net =  BASE_Transformer_UNet(input_nc=19, output_nc=5, token_len=int(args.batch_size / 2), resnet_stages_num=4,
                               with_pos='learned', with_decoder_pos='learned', enc_depth=1, dec_depth=8, diff_block=args.diff_block)
     else:
         raise NotImplementedError('Generator model name [%s] is not recognized' % args.net_G)
@@ -1113,11 +1113,12 @@ class ResNet_UNet(torch.nn.Module):
             nn.init.kaiming_uniform_(self.resnet_diff1.conv1.weight, mode='fan_out', nonlinearity='relu')
         elif diff_block == 2:
             self.resnet_base.conv1 = torch.nn.Conv2d(in_channels=8, out_channels=original_conv1.out_channels, kernel_size=original_conv1.kernel_size, stride=original_conv1.stride, padding=original_conv1.padding, bias=original_conv1.bias)
-            nn.init.kaiming_uniform_(self.resnet_base.conv1.weight, mode='fan_out', nonlinearity='relu')            
-
-            self.resnet_diff2 = models.resnet18(pretrained=True, replace_stride_with_dilation=[False,True,True])   
-            self.resnet_diff2.conv1 = torch.nn.Conv2d(in_channels=17, out_channels=original_conv1.out_channels, kernel_size=original_conv1.kernel_size, stride=original_conv1.stride, padding=original_conv1.padding, bias=original_conv1.bias)
-            nn.init.kaiming_uniform_(self.resnet_diff2.conv1.weight, mode='fan_out', nonlinearity='relu')
+            
+            self.resnet_diff2_dynamic = models.resnet18(pretrained=True, replace_stride_with_dilation=[False,True,True])  
+            self.resnet_diff2_dynamic.conv1 = torch.nn.Conv2d(in_channels=17, out_channels=original_conv1.out_channels, kernel_size=original_conv1.kernel_size, stride=original_conv1.stride, padding=original_conv1.padding, bias=original_conv1.bias)
+            
+            nn.init.kaiming_uniform_(self.resnet_base.conv1.weight, mode='fan_out', nonlinearity='relu')             
+            nn.init.kaiming_uniform_(self.resnet_diff2_dynamic.conv1.weight, mode='fan_out', nonlinearity='relu')
         elif diff_block == 3:
             self.resnet_diff3_static = models.resnet18(pretrained=True, replace_stride_with_dilation=[False,True,True])
             self.resnet_diff3_dynamic = models.resnet18(pretrained=True, replace_stride_with_dilation=[False,True,True])
@@ -1196,20 +1197,20 @@ class ResNet_UNet(torch.nn.Module):
     
     def forward_single_diff2_(self, x, num_channels):
         if num_channels == 8: # Pre disaster images and static attributes stacked - use the modified base model.
-            return self.forward_single_(x)
+            return self.forward_single_(x)    
         elif num_channels == 17: # Post disaster images and dynamic attributes stacked - use the diff2 model.
-            x = self.resnet_diff2.conv1(x)
+            x = self.resnet_diff2_dynamic.conv1(x)
             
-            x = self.resnet_diff2.bn1(x)
-            x_2 = self.resnet_diff2.relu(x)
-            x_2_pool = self.resnet_diff2.maxpool(x)
+            x = self.resnet_diff2_dynamic.bn1(x)
+            x_2 = self.resnet_diff2_dynamic.relu(x)
+            x_2_pool = self.resnet_diff2_dynamic.maxpool(x)
         
-            x_4 = self.resnet_diff2.layer1(x_2_pool) # 1/4, in=64, out=64
+            x_4 = self.resnet_diff2_dynamic.layer1(x_2_pool) # 1/4, in=64, out=64
 
-            x_8 = self.resnet_diff2.layer2(x_4) # 1/8, in=64, out=128
-            x_8_pool = self.resnet_diff2.maxpool(x_8)
+            x_8 = self.resnet_diff2_dynamic.layer2(x_4) # 1/8, in=64, out=128
+            x_8_pool = self.resnet_diff2_dynamic.maxpool(x_8)
 
-            x_10 = self.resnet_diff2.layer3(x_8_pool) # 1/8, in=128, out=256
+            x_10 = self.resnet_diff2_dynamic.layer3(x_8_pool) # 1/8, in=128, out=256
 
             if self.resnet_stages_num > 4:
                 raise NotImplementedError
@@ -1226,7 +1227,7 @@ class ResNet_UNet(torch.nn.Module):
         elif num_channels == 5: # Static attributes - use the diff3 static attributes model.
             x = self.resnet_diff3_static.conv1(x)
             
-            x = self.resnet_diff3_static.bn1(x) # ERROR: NaN VALUES ARE INTRODUCED HERE!!!!!!
+            x = self.resnet_diff3_static.bn1(x)
             x_2 = self.resnet_diff3_static.relu(x)
             x_2_pool = self.resnet_diff3_static.maxpool(x)
         

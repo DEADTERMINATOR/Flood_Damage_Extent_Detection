@@ -165,7 +165,8 @@ class CDTrainer():
         # pred = torch.argmax(self.G_pred, dim=1, keepdim=True)
         pred = torch.argmax(self.G_final_pred, dim=1, keepdim=True)
         pred_vis = pred * 255
-        return pred_vis
+        #return pred_vis
+        return pred
 
     def _save_checkpoint(self, ckpt_name):
         torch.save({
@@ -221,11 +222,11 @@ class CDTrainer():
             #vis = np.concatenate([vis_input, vis_input2, vis_pred, vis_gt], axis=0)
             #vis = np.clip(vis, a_min=0.0, a_max=1.0)
 
-            axes[0].imshow(vis_input)
+            axes[0].imshow(vis_input[:, :, :3])
             axes[0].set_title("Pre-Disaster")
             axes[0].axis('off')
         
-            axes[1].imshow(vis_input2)
+            axes[1].imshow(vis_input2[:, :, :3])
             axes[1].set_title('Post-Disaster')
             axes[1].axis('off')
         
