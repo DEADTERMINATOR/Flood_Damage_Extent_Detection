@@ -300,7 +300,7 @@ def multi_cross_entropy(input, target, weight=None, reduction='mean',ignore_inde
     #weight_ = torch.Tensor([1, 5, 100, 90, 100]).cuda()
 
     # Weights for Harvey dataset.
-    weight_ = torch.Tensor([10, 50, 75, 75, 1]).cuda()
+    weight_ = torch.Tensor([5, 100, 100, 100, 1]).cuda()
     # print("pred: ", input.shape, "target: ", target.shape)
  
     return F.cross_entropy(input=input, target=target, weight=weight_,

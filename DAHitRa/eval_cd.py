@@ -32,7 +32,6 @@ def main():
     parser.add_argument('--n_class', default=2, type=int)
     parser.add_argument('--net_G', default='base_transformer_pos_s4_dd8_dedim8', type=str,
                         help='base_resnet18 | base_transformer_pos_s4_dd8 | base_transformer_pos_s4_dd8_dedim8|')
-    parser.add_argument('--diff_block', default=0, type=int)
 
     parser.add_argument('--checkpoint_name', default='best_ckpt.pt', type=str)
 
@@ -50,7 +49,7 @@ def main():
     for i in range(16):
         dataloader = utils.get_loader(args.data_name, img_size=args.img_size,
                                     batch_size=args.batch_size, is_train=False,
-                                    split='test', patch=i, dataset=args.dataset, diff_block=args.diff_block)
+                                    split='test', patch=i, dataset=args.dataset)
         model = CDEvaluator(args=args, dataloader=dataloader)
 
         model.eval_models(checkpoint_name=args.checkpoint_name)

@@ -8,8 +8,6 @@ import torchvision.transforms.functional as TF
 from torchvision import transforms
 import torch
 
-import matplotlib.pyplot as plt
-
 
 def to_tensor_and_norm(imgs, labels):
     # to tensor
@@ -268,59 +266,51 @@ class CDDataAugmentation_Harvey:
     def transform(self, imgs, labels, diff_block=0, attributes=None, is_train=True):
         imgs = [TF.to_tensor(img) for img in imgs]
         labels = [torch.from_numpy(np.array(label, np.uint8)).unsqueeze(dim=0) for label in labels]
-        attributes = {att_name: torch.from_numpy(np.array(att, np.float32)) for att_name, att in attributes.items()}
+        attributes = {att_name: torch.from_numpy(np.array(att, np.uint8)).unsqueeze(dim=0) for att_name, att in attributes.items()}
 
         imgs = [TF.resize(img, (self.img_size, self.img_size)) for img in imgs]
         labels = [TF.resize(label, (self.img_size, self.img_size)) for label in labels]
-        attributes = {att_name: TF.resize(att, (self.img_size, self.img_size)) for att_name, att in attributes.items()}                   
+        attributes = {att_name: TF.resize(att, (self.img_size, self.img_size)) for att_name, att in attributes.items()}
+
+        attr = None
+        if diff_block == 1:
+            attr = torch.stack([attributes[att_name] for att_name in attributes], dim=0).squeeze(1)  # Stacking along a new dimension
 
         random_base = 0.5
         if self.with_random_hflip and random.random() > random_base:
             imgs = [TF.hflip(img) for img in imgs]
             labels = [TF.hflip(label) for label in labels]
-            attributes = {att_name: TF.hflip(att) for att_name, att in attributes.items()}
+            if attr is not None:
+                attr = torch.stack([TF.hflip(a) for a in attr], dim=0)
 
         if self.with_random_vflip and random.random() > random_base:
             imgs = [TF.vflip(img) for img in imgs]
             labels = [TF.vflip(label) for label in labels]
-            attributes = {att_name: TF.vflip(att) for att_name, att in attributes.items()}
+            if attr is not None:
+                attr = torch.stack([TF.vflip(a) for a in attr], dim=0)
 
         if self.with_random_rot and random.random() > random_base:
             angle = random.choice([90, 180, 270])
             imgs = [TF.rotate(img, angle) for img in imgs]
             labels = [TF.rotate(label, angle) for label in labels]
-            attributes = {att_name: TF.rotate(att, angle) for att_name, att in attributes.items()}
+            if attr is not None:
+                attr = torch.stack([TF.rotate(a, angle) for a in attr], dim=0)
 
         if self.with_random_crop and random.random() > random_base:
             i, j, h, w = transforms.RandomResizedCrop.get_params(imgs[0], scale=(0.8, 1.0), ratio=(1, 1))
             imgs = [TF.resized_crop(img, i, j, h, w, size=(self.img_size, self.img_size), interpolation=TF.InterpolationMode.BICUBIC) for img in imgs]
             labels = [TF.resized_crop(label, i, j, h, w, size=(self.img_size, self.img_size), interpolation=TF.InterpolationMode.NEAREST) for label in labels]
-            attributes = {att_name: TF.resized_crop(att, i, j, h, w, size=(self.img_size, self.img_size), interpolation=TF.InterpolationMode.BICUBIC) for att_name, att in attributes.items()}
+            if attr is not None:
+                attr = torch.stack([TF.resized_crop(a, i, j, h, w, size=(self.img_size, self.img_size), interpolation=TF.InterpolationMode.BICUBIC) for a in attr], dim=0)
 
-        imgs = [TF.normalize(img, mean=[0.5, 0.5, 0.5], std=[0.5, 0.5, 0.5]) for img in imgs]
-        attributes = {att_name: TF.normalize(att, mean=[0.5], std=[0.5]) for att_name, att in attributes.items()}
+        imgs = [TF.normalize(img[:3], mean=[0.5, 0.5, 0.5], std=[0.5, 0.5, 0.5]) for img in imgs]
 
-        contains_nan = {att_name: torch.isnan(att).any().item() for att_name, att in attributes.items()}
-        contains_inf = {att_name: torch.isinf(att).any().item() for att_name, att in attributes.items()}
-        for attribute, value in contains_nan.items():
-            if value:
-                print("Contains NaN:", attribute)
-        for attribute, value in contains_inf.items():
-            if value:
-                print("Contains Inf:", attribute)
-
-        attr = None
-        if diff_block == 1 or diff_block == 3:
-            attr = torch.stack([attributes[att_name] for att_name in attributes], dim=0).squeeze(1)  # Stacking along a new dimension
-        elif diff_block == 2:
-            imgs[0] = torch.cat([imgs[0], attributes["elevation"], attributes["imperviousness"], attributes["hand"], attributes["dist_coast"], attributes["dist_stream"]], dim=0)
-            imgs[1] = torch.cat([imgs[1], attributes["rain_824"], attributes["rain_825"], attributes["rain_826"], attributes["rain_827"], attributes["rain_828"], attributes["rain_829"], attributes["rain_830"],
-                                 attributes["stream_elev_824"], attributes["stream_elev_825"], attributes["stream_elev_826"], attributes["stream_elev_827"], attributes["stream_elev_828"], attributes["stream_elev_829"], attributes["stream_elev_830"]], dim=0)
-            
-        if diff_block == 1 or diff_block == 3:
+        if diff_block == 1:
             return imgs, attr, labels
         else:
             return imgs, labels
+
+
         
     
 def pil_crop(image, box, cropsize, default_value):

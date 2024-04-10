@@ -355,7 +355,7 @@ class HarveyDataset(ImageDataset):
         with rasterio.open(os.path.join(self.root_dir, self.split, 'stream_elev/830', self.stream_elev_830_img_name_list[index % self.A_size])) as src:
             stream_elev_830 = src.read(1).astype(np.float32)
             stream_elev_830 = np.expand_dims(stream_elev_830, axis=0)
-           
+            
         return {
             "elevation": elevation,
             "imperviousness": imperviousness,
@@ -377,39 +377,14 @@ class HarveyDataset(ImageDataset):
             "stream_elev_829": stream_elev_829,
             "stream_elev_830": stream_elev_830,
             }
-
-        """
-        return {
-            self.elevation_img_name_list[index % self.A_size]: elevation,
-            self.imperviousness_img_name_list[index % self.A_size]: imperviousness,
-            self.hand_img_name_list[index % self.A_size]: hand,
-            self.dist_coast_img_name_list[index % self.A_size]: dist_coast,
-            self.dist_stream_img_name_list[index % self.A_size]: dist_stream,
-            self.rain_824_img_name_list[index % self.A_size]: rain_824,
-            self.rain_825_img_name_list[index % self.A_size]: rain_825,
-            self.rain_826_img_name_list[index % self.A_size]: rain_826,
-            self.rain_827_img_name_list[index % self.A_size]: rain_827,
-            self.rain_828_img_name_list[index % self.A_size]: rain_828,
-            self.rain_829_img_name_list[index % self.A_size]: rain_829,
-            self.rain_830_img_name_list[index % self.A_size]: rain_830,
-            self.stream_elev_824_img_name_list[index % self.A_size]: stream_elev_824,
-            self.stream_elev_825_img_name_list[index % self.A_size]: stream_elev_825,
-            self.stream_elev_826_img_name_list[index % self.A_size]: stream_elev_826,
-            self.stream_elev_827_img_name_list[index % self.A_size]: stream_elev_827,
-            self.stream_elev_828_img_name_list[index % self.A_size]: stream_elev_828,
-            self.stream_elev_829_img_name_list[index % self.A_size]: stream_elev_829,
-            self.stream_elev_830_img_name_list[index % self.A_size]: stream_elev_830,
-            }
-        """
             
 
     def __init__(self, root_dir, img_size, split='train', is_train=True,
-                 to_tensor=True, load_meta_attributes_upfront=False, diff_block=0):
+                 to_tensor=True, load_meta_attributes_upfront=False):
         super(HarveyDataset, self).__init__(root_dir, img_size=img_size, split=split, is_train=is_train,
                                         to_tensor=to_tensor)
         self.split = split
         self.load_meta_attributes_upfront = load_meta_attributes_upfront
-        self.diff_block = diff_block
         
         self.label_img_name_list = os.listdir(os.path.join(self.root_dir, split, 'PDE_labels'))
         self.elevation_img_name_list = os.listdir(os.path.join(self.root_dir, split, 'elevation'))
@@ -488,7 +463,6 @@ class HarveyDataset(ImageDataset):
                 img_size=self.img_size,
                 with_random_hflip=True,
                 with_random_vflip=True,
-                with_random_rot=True,
                 with_random_crop=True
             )
         else:
@@ -534,10 +508,7 @@ class HarveyDataset(ImageDataset):
         """
         attribute_dict = self.load_meta_attributes_by_index(index)
             
-        if self.diff_block == 1 or self.diff_block == 3:
-            [img, img_B], attributes, [label] = self.augm.transform(imgs=[img, img_B], labels=[label], attributes=attribute_dict, diff_block=self.diff_block)
-            return {'name': name, 'A': img, 'B': img_B, 'C': attributes, 'L': label}
-        else:
-            [img, img_B], [label] = self.augm.transform(imgs=[img, img_B], labels=[label], attributes=attribute_dict, diff_block=self.diff_block)
-            return {'name': name, 'A': img, 'B': img_B, 'L': label}
-        
+        [img, img_B], attributes, [label] = self.augm.transform(imgs=[img, img_B], labels=[label], attributes=attribute_dict, diff_block=1)
+            
+        # [img, img_B], [label] = self.augm.transform([img, img_B], [label], to_tensor=self.to_tensor, split=self.split)
+        return {'name': name, 'A': img, 'B': img_B, 'C': attributes, 'L': label}

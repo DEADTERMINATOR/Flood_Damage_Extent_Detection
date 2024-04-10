@@ -4,7 +4,7 @@
     <SchemaVersion>2.0</SchemaVersion>
     <ProjectGuid>6d5bf211-b00b-4c76-b335-ab6d89beefb9</ProjectGuid>
     <ProjectHome>.</ProjectHome>
-    <StartupFile>eval_cd.py</StartupFile>
+    <StartupFile>main_cd.py</StartupFile>
     <SearchPath>
     </SearchPath>
     <WorkingDirectory>.</WorkingDirectory>
@@ -12,7 +12,7 @@
     <Name>DAHitRa</Name>
     <RootNamespace>DAHitRa</RootNamespace>
     <LaunchProvider>Standard Python launcher</LaunchProvider>
-    <CommandLineArguments>--dataset "HarveyDataset" --data_name "Harvey" --n_class 5 --net_G "newUNetTrans" --img_size 256 --project_name "nometa_newUNetTrans_Harvey_0.001lr_linearlrpolicy_300epochs_256imgsize_8batchsize_dicefocalloss"</CommandLineArguments>
+    <CommandLineArguments>--dataset "HarveyDataset" --data_name "Harvey" --n_class 5 --lr 0.003 --net_G "newUNetTrans" --img_size 256 --max_epochs 100 --loss "dice+focal" --lr_policy "linear" --batch_size 6 --project_name "T3"</CommandLineArguments>
     <EnableNativeCodeDebugging>False</EnableNativeCodeDebugging>
     <IsWindowsApplication>False</IsWindowsApplication>
   </PropertyGroup>

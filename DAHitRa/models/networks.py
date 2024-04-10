@@ -1,4 +1,3 @@
-from tokenize import Ignore
 import torch
 import torch.nn as nn
 from torch.nn import init
@@ -16,7 +15,8 @@ import models
 from models.help_funcs import Transformer, TransformerDecoder, TwoLayerConv2d
 from torch.nn.modules.padding import ReplicationPad2d
 from models.ChangeFormer import ChangeFormerV1, ChangeFormerV6
-from models.vit import ViT
+import models.vit
+
 ###############################################################################
 # Helper Functions
 ###############################################################################
@@ -166,8 +166,8 @@ def define_G(args, init_type='normal', init_gain=0.02, gpu_ids=[]):
     elif args.net_G == 'changeFormerV6':
        net = ChangeFormerV6()
     elif args.net_G == 'newUNetTrans':
-       net =  BASE_Transformer_UNet(input_nc=19, output_nc=5, token_len=int(args.batch_size / 2), resnet_stages_num=4,
-                              with_pos='learned', with_decoder_pos='learned', enc_depth=1, dec_depth=8, diff_block=args.diff_block)
+       net =  BASE_Transformer_UNet(input_nc=3, output_nc=5, token_len=4, resnet_stages_num=4,
+                              with_pos='learned', with_decoder_pos='learned', enc_depth=1, dec_depth=8)
     else:
         raise NotImplementedError('Generator model name [%s] is not recognized' % args.net_G)
     return init_net(net, init_type, init_gain, gpu_ids)
@@ -1090,7 +1090,7 @@ class SiamUnet_conc(nn.Module):
 class ResNet_UNet(torch.nn.Module):
     def __init__(self, input_nc, output_nc,
                  resnet_stages_num=5, backbone='resnet18',
-                 output_sigmoid=False, if_upsample_2x=True, diff_block=0):
+                 output_sigmoid=False, if_upsample_2x=True):
         """
         In the constructor we instantiate two nn.Linear modules and assign them as
         member variables.
@@ -1098,37 +1098,11 @@ class ResNet_UNet(torch.nn.Module):
         super(ResNet_UNet, self).__init__()
         expand = 1
         if backbone == 'resnet18':
-            self.resnet_base = models.resnet18(pretrained=True, replace_stride_with_dilation=[False,True,True])
+            self.resnet = models.resnet18(pretrained=True, replace_stride_with_dilation=[False,True,True])
         elif backbone == 'resnet34':
-            self.resnet_base = models.resnet34(pretrained=True, replace_stride_with_dilation=[False,True,True])
+            self.resnet = models.resnet34(pretrained=True, replace_stride_with_dilation=[False,True,True])
         else:
             raise NotImplementedError
-        
-        original_conv1 = self.resnet_base.conv1
-        if diff_block == 1:
-            self.resnet_diff1 = models.resnet18(pretrained=True, replace_stride_with_dilation=[False,True,True])
-            self.resnet_diff1.conv1 = torch.nn.Conv2d(in_channels=19, out_channels=original_conv1.out_channels, kernel_size=original_conv1.kernel_size, stride=original_conv1.stride, padding=original_conv1.padding, bias=original_conv1.bias)
-            
-            # Apply He initialization to the new conv1 layer
-            nn.init.kaiming_uniform_(self.resnet_diff1.conv1.weight, mode='fan_out', nonlinearity='relu')
-        elif diff_block == 2:
-            self.resnet_base.conv1 = torch.nn.Conv2d(in_channels=8, out_channels=original_conv1.out_channels, kernel_size=original_conv1.kernel_size, stride=original_conv1.stride, padding=original_conv1.padding, bias=original_conv1.bias)
-            
-            self.resnet_diff2_dynamic = models.resnet18(pretrained=True, replace_stride_with_dilation=[False,True,True])  
-            self.resnet_diff2_dynamic.conv1 = torch.nn.Conv2d(in_channels=17, out_channels=original_conv1.out_channels, kernel_size=original_conv1.kernel_size, stride=original_conv1.stride, padding=original_conv1.padding, bias=original_conv1.bias)
-            
-            nn.init.kaiming_uniform_(self.resnet_base.conv1.weight, mode='fan_out', nonlinearity='relu')             
-            nn.init.kaiming_uniform_(self.resnet_diff2_dynamic.conv1.weight, mode='fan_out', nonlinearity='relu')
-        elif diff_block == 3:
-            self.resnet_diff3_static = models.resnet18(pretrained=True, replace_stride_with_dilation=[False,True,True])
-            self.resnet_diff3_dynamic = models.resnet18(pretrained=True, replace_stride_with_dilation=[False,True,True])
-            
-            self.resnet_diff3_static.conv1 = torch.nn.Conv2d(in_channels=5, out_channels=original_conv1.out_channels, kernel_size=original_conv1.kernel_size, stride=original_conv1.stride, padding=original_conv1.padding, bias=original_conv1.bias)
-            self.resnet_diff3_dynamic.conv1 = torch.nn.Conv2d(in_channels=14, out_channels=original_conv1.out_channels, kernel_size=original_conv1.kernel_size, stride=original_conv1.stride, padding=original_conv1.padding, bias=original_conv1.bias)
-            
-            nn.init.kaiming_uniform_(self.resnet_diff3_static.conv1.weight, mode='fan_out', nonlinearity='relu')
-            nn.init.kaiming_uniform_(self.resnet_diff3_dynamic.conv1.weight, mode='fan_out', nonlinearity='relu')
-            
         self.relu = nn.ReLU()
         self.upsamplex2 = nn.Upsample(scale_factor=2)
         self.upsamplex4 = nn.Upsample(scale_factor=4, mode='bilinear')
@@ -1146,20 +1120,21 @@ class ResNet_UNet(torch.nn.Module):
             raise NotImplementedError
         self.conv_pred = nn.Conv2d(384, 32, kernel_size=3, padding=1)
 
-    def forward_single_(self, x):
-        # resnet layers
-        x = self.resnet_base.conv1(x)
-            
-        x = self.resnet_base.bn1(x)
-        x_2 = self.resnet_base.relu(x)
-        x_2_pool = self.resnet_base.maxpool(x)
+
+    def forward_single(self, x):
         
-        x_4 = self.resnet_base.layer1(x_2_pool) # 1/4, in=64, out=64
+        # resnet layers
+        x = self.resnet.conv1(x)
+        x = self.resnet.bn1(x)
+        x_2 = self.resnet.relu(x)
+        x_2_pool = self.resnet.maxpool(x)
+        
+        x_4 = self.resnet.layer1(x_2_pool) # 1/4, in=64, out=64
 
-        x_8 = self.resnet_base.layer2(x_4) # 1/8, in=64, out=128
-        x_8_pool = self.resnet_base.maxpool(x_8)
+        x_8 = self.resnet.layer2(x_4) # 1/8, in=64, out=128
+        x_8_pool = self.resnet.maxpool(x_8)
 
-        x_10 = self.resnet_base.layer3(x_8_pool) # 1/8, in=128, out=256
+        x_10 = self.resnet.layer3(x_8_pool) # 1/8, in=128, out=256
 
         if self.resnet_stages_num > 4:
             raise NotImplementedError
@@ -1168,98 +1143,70 @@ class ResNet_UNet(torch.nn.Module):
         x = self.upsamplex2(x_10)
 
         return x_2, x_4, x_8, x_10
-    
-    def forward_single_diff1_(self, x, num_channels):
-        if num_channels == 3: # Pre or post disaster images - use the base model
-            return self.forward_single_(x)
-        elif num_channels == 19: # All static and dynamic attributes stacked - use the diff1 attributes model
-            x = self.resnet_diff1.conv1(x)
-            
-            x = self.resnet_diff1.bn1(x)
-            x_2 = self.resnet_diff1.relu(x)
-            x_2_pool = self.resnet_diff1.maxpool(x)
-        
-            x_4 = self.resnet_diff1.layer1(x_2_pool) # 1/4, in=64, out=64
 
-            x_8 = self.resnet_diff1.layer2(x_4) # 1/8, in=64, out=128
-            x_8_pool = self.resnet_diff1.maxpool(x_8)
 
-            x_10 = self.resnet_diff1.layer3(x_8_pool) # 1/8, in=128, out=256
-
-            if self.resnet_stages_num > 4:
-                raise NotImplementedError
-
-            x = self.upsamplex2(x_10)
-
-            return x_2, x_4, x_8, x_10
-        else:
-            raise NotImplementedError
-    
-    def forward_single_diff2_(self, x, num_channels):
-        if num_channels == 8: # Pre disaster images and static attributes stacked - use the modified base model.
-            return self.forward_single_(x)    
-        elif num_channels == 17: # Post disaster images and dynamic attributes stacked - use the diff2 model.
-            x = self.resnet_diff2_dynamic.conv1(x)
-            
-            x = self.resnet_diff2_dynamic.bn1(x)
-            x_2 = self.resnet_diff2_dynamic.relu(x)
-            x_2_pool = self.resnet_diff2_dynamic.maxpool(x)
-        
-            x_4 = self.resnet_diff2_dynamic.layer1(x_2_pool) # 1/4, in=64, out=64
-
-            x_8 = self.resnet_diff2_dynamic.layer2(x_4) # 1/8, in=64, out=128
-            x_8_pool = self.resnet_diff2_dynamic.maxpool(x_8)
-
-            x_10 = self.resnet_diff2_dynamic.layer3(x_8_pool) # 1/8, in=128, out=256
-
-            if self.resnet_stages_num > 4:
-                raise NotImplementedError
-
-            x = self.upsamplex2(x_10)
-
-            return x_2, x_4, x_8, x_10
+class ResNet_UNet_Meta(torch.nn.Module):
+    def __init__(self, input_nc = 19, output_nc = 3,
+                 resnet_stages_num=4, backbone='resnet18',
+                 output_sigmoid=False, if_upsample_2x=True):
+        """
+        In the constructor we instantiate two nn.Linear modules and assign them as
+        member variables.
+        """
+        super(ResNet_UNet_Meta, self).__init__()
+        expand = 1
+        if backbone == 'resnet18':
+            self.resnet = models.resnet18(pretrained=True, replace_stride_with_dilation=[False,True,True])
+        elif backbone == 'resnet34':
+            self.resnet = models.resnet34(pretrained=True, replace_stride_with_dilation=[False,True,True])
         else:
             raise NotImplementedError
         
-    def forward_single_diff3_(self, x, num_channels):
-        if num_channels == 3: # Pre or post disaster images - use the base model.
-            return self.forward_single_(x)
-        elif num_channels == 5: # Static attributes - use the diff3 static attributes model.
-            x = self.resnet_diff3_static.conv1(x)
-            
-            x = self.resnet_diff3_static.bn1(x)
-            x_2 = self.resnet_diff3_static.relu(x)
-            x_2_pool = self.resnet_diff3_static.maxpool(x)
-        
-            x_4 = self.resnet_diff3_static.layer1(x_2_pool) # 1/4, in=64, out=64
+        original_conv1 = self.resnet.conv1
+        self.resnet.conv1 = nn.Conv2d(input_nc, original_conv1.out_channels, 
+                                      kernel_size=original_conv1.kernel_size, 
+                                      stride=original_conv1.stride, 
+                                      padding=original_conv1.padding, 
+                                      bias=original_conv1.bias)
+        self.relu = nn.ReLU()
+        self.upsamplex2 = nn.Upsample(scale_factor=2)
+        self.upsamplex4 = nn.Upsample(scale_factor=4, mode='bilinear')
 
-            x_8 = self.resnet_diff3_static.layer2(x_4) # 1/8, in=64, out=128
-            x_8_pool = self.resnet_diff3_static.maxpool(x_8)
+        self.resnet_stages_num = resnet_stages_num
 
-            x_10 = self.resnet_diff3_static.layer3(x_8_pool) # 1/8, in=128, out=256
-        elif num_channels == 14: # Dynamic attributes - use the diff3 dynamic attributes model.
-            x = self.resnet_diff3_dynamic.conv1(x)
-            
-            x = self.resnet_diff3_dynamic.bn1(x)
-            x_2 = self.resnet_diff3_dynamic.relu(x)
-            x_2_pool = self.resnet_diff3_dynamic.maxpool(x)
-        
-            x_4 = self.resnet_diff3_dynamic.layer1(x_2_pool) # 1/4, in=64, out=64
-
-            x_8 = self.resnet_diff3_dynamic.layer2(x_4) # 1/8, in=64, out=128
-            x_8_pool = self.resnet_diff3_dynamic.maxpool(x_8)
-
-            x_10 = self.resnet_diff3_dynamic.layer3(x_8_pool) # 1/8, in=128, out=256
+        self.if_upsample_2x = if_upsample_2x
+        if self.resnet_stages_num == 5:
+            layers = 512 * expand
+        elif self.resnet_stages_num == 4:
+            layers = 256 * expand
+        elif self.resnet_stages_num == 3:
+            layers = 128 * expand
         else:
             raise NotImplementedError
+        self.conv_pred = nn.Conv2d(384, 32, kernel_size=3, padding=1)
+
+    def forward(self, x):
+        #print("RESNET STAGES", self.resnet_stages_num)
+        # resnet layers
+        x = self.resnet.conv1(x)
+        x = self.resnet.bn1(x)
+        x_2 = self.resnet.relu(x)
+        x_2_pool = self.resnet.maxpool(x)
         
+        x_4 = self.resnet.layer1(x_2_pool) # 1/4, in=64, out=64
+
+        x_8 = self.resnet.layer2(x_4) # 1/8, in=64, out=128
+        x_8_pool = self.resnet.maxpool(x_8)
+
+        x_10 = self.resnet.layer3(x_8_pool) # 1/8, in=128, out=256
+ 
         if self.resnet_stages_num > 4:
             raise NotImplementedError
 
+        #print(x_2.shape, x_4.shape, x_8.shape, x_10.shape)
         x = self.upsamplex2(x_10)
-            
-        return x_2, x_4, x_8, x_10
 
+        return x_2, x_4, x_8, x_10
 
 
 class BASE_Transformer_UNet(ResNet_UNet):
@@ -1275,50 +1222,24 @@ class BASE_Transformer_UNet(ResNet_UNet):
                  backbone='resnet18',
                  decoder_softmax=True, with_decoder_pos=None,
                  with_decoder=True,
-                 diff_block=0,
                  # ViT parameters
-                 vit_image_size=256, vit_patch_size=16, vit_num_classes=32, 
-                 vit_dim=1024, vit_depth=6, vit_heads=16, vit_mlp_dim=2048, 
-                 vit_pool='cls', vit_channels=3, vit_dim_head=64, 
-                 vit_dropout=0., vit_emb_dropout=0.):
+                 vit_image_size=256, vit_patch_size=16, vit_num_classes=1000, 
+                 vit_dim=768, vit_depth=6, vit_heads=12, vit_mlp_dim=2048, 
+                 vit_pool='cls', vit_channels=256, vit_dim_head=64, 
+                 vit_dropout=0.1, vit_emb_dropout=0.1):
         super(BASE_Transformer_UNet, self).__init__(input_nc, output_nc,backbone=backbone,
                                              resnet_stages_num=resnet_stages_num,
-                                               if_upsample_2x=if_upsample_2x, diff_block=diff_block
+                                               if_upsample_2x=if_upsample_2x,
                                                )
 
         print("using UNet Transformer !!!!") 
-
+        self.meta_res = ResNet_UNet_Meta()
         self.token_len = token_len
         self.tokenizer = tokenizer
         self.token_trans = token_trans
         self.with_decoder = with_decoder
         self.with_pos = with_pos
-        
-        self.diff_block = diff_block
-        if diff_block == 0:
-            self.forward_trans_module = self._forward_trans_module
-            self.forward_single = self.forward_single_
-        elif diff_block == 1:
-            self.forward_trans_module = self._forward_trans_module_diff1
-            self.forward_single = self.forward_single_diff1_
-        elif diff_block == 2:
-            self.forward_trans_module = self._forward_trans_module_diff2
-            self.forward_single = self.forward_single_diff2_
-        elif diff_block == 3:
-            self.forward_trans_module = self._forward_trans_module_diff3
-            self.forward_single = self.forward_single_diff3_
 
-        self.vit_5 = ViT(image_size=16, patch_size=4, num_classes=32,
-                         dim=vit_dim, depth=vit_depth, heads=vit_heads, mlp_dim=vit_mlp_dim, pool=vit_pool, 
-                         channels=32, dim_head=vit_dim_head, dropout=vit_dropout, emb_dropout=vit_emb_dropout)
-        self.vit_4 = ViT(image_size=32, patch_size=8, num_classes=32,
-                         dim=vit_dim, depth=vit_depth, heads=vit_heads, mlp_dim=vit_mlp_dim, pool=vit_pool, 
-                         channels=32, dim_head=vit_dim_head, dropout=vit_dropout, emb_dropout=vit_emb_dropout)
-        self.vit_3 = ViT(image_size=64, patch_size=16, num_classes=32,
-                         dim=vit_dim, depth=vit_depth, heads=vit_heads, mlp_dim=vit_mlp_dim, pool=vit_pool, 
-                         channels=32, dim_head=vit_dim_head, dropout=vit_dropout, emb_dropout=vit_emb_dropout)
-        self.vits = [self.vit_3, self.vit_4, self.vit_5]
-        
         if not self.tokenizer:
             #  if not use tokenzier，then downsample the feature map into a certain size
             self.pooling_size = pool_size
@@ -1366,8 +1287,7 @@ class BASE_Transformer_UNet(ResNet_UNet):
             self.pos_embedding_decoder_4 =nn.Parameter(torch.randn(1, dim_4, 32, 32))
             self.pos_embedding_decoder_3 =nn.Parameter(torch.randn(1, dim_3, 64, 64))
             self.pos_embedding_decoder_2 =nn.Parameter(torch.randn(1, dim_2, decoder_pos_size, decoder_pos_size))
-            self.pos_embedding_decoder_attr = nn.Parameter(torch.randn(1, 4, 256, 256))
-            self.pos_embedding_decoder_layers = [self.pos_embedding_decoder_2, self.pos_embedding_decoder_3, self.pos_embedding_decoder_4, self.pos_embedding_decoder_5, self.pos_embedding_decoder_attr]
+            self.pos_embedding_decoder_layers = [self.pos_embedding_decoder_2, self.pos_embedding_decoder_3, self.pos_embedding_decoder_4, self.pos_embedding_decoder_5]
 
         self.enc_depth = enc_depth
         self.dec_depth = dec_depth
@@ -1392,16 +1312,16 @@ class BASE_Transformer_UNet(ResNet_UNet):
         self.transformer_layers = [self.transformer_2, self.transformer_3, self.transformer_4, self.transformer_5]
         self.transformer_decoder_layers = [self.transformer_decoder_2, self.transformer_decoder_3, self.transformer_decoder_4, self.transformer_decoder_5]
 
-        self.conv_layer2_0 = TwoLayerConv2d(in_channels=128, out_channels=32, kernel_size=3)
+        self.conv_layer2_0 = TwoLayerConv2d(in_channels=192, out_channels=64, kernel_size=3)
 
         # # EXP NEW : Worked Better than BiT and changeformer
-        self.conv_layer2 = nn.Sequential(nn.Conv2d(in_channels=32, out_channels=32, kernel_size=3, padding=1),
+        self.conv_layer2 = nn.Sequential(nn.Conv2d(in_channels=64, out_channels=64, kernel_size=3, padding=1),
                                         nn.ReLU())
-        self.conv_layer3 = nn.Sequential(nn.Conv2d(in_channels=32, out_channels=32, kernel_size=3, padding=1),
+        self.conv_layer3 = nn.Sequential(nn.Conv2d(in_channels=64, out_channels=64, kernel_size=3, padding=1),
                                         nn.ReLU())
-        self.conv_layer4 = nn.Sequential(nn.Conv2d(in_channels=32, out_channels=32, kernel_size=3, padding=1),
+        self.conv_layer4 = nn.Sequential(nn.Conv2d(in_channels=64, out_channels=64, kernel_size=3, padding=1),
                                         nn.ReLU())
-        self.classifier = nn.Conv2d(in_channels=32, out_channels=output_nc, kernel_size=3, padding=1)
+        self.classifier = nn.Conv2d(in_channels=64, out_channels=output_nc, kernel_size=3, padding=1)
         
         # FINALIZED CLASSIFIER: Works Best      
         # self.classifier = nn.Conv2d(in_channels=32, out_channels=output_nc, kernel_size=3, padding=1)
@@ -1422,6 +1342,11 @@ class BASE_Transformer_UNet(ResNet_UNet):
         # self.classifier = nn.Sequential(nn.Conv2d(in_channels=8, out_channels=5, kernel_size=3, padding=1),
         #                                 nn.ReLU(),
         #                                 nn.Conv2d(in_channels=5, out_channels=output_nc, kernel_size=3, padding=1))
+
+
+        self.vit = models.vit.ViT(image_size=vit_image_size, patch_size=vit_patch_size, num_classes=vit_num_classes,
+                       dim=vit_dim, depth=vit_depth, heads=vit_heads, mlp_dim=vit_mlp_dim, pool=vit_pool, 
+                       channels=vit_channels, dim_head=vit_dim_head, dropout=vit_dropout, emb_dropout=vit_emb_dropout)
 
     def _forward_semantic_tokens(self, x, layer=None):
         b, c, h, w = x.shape
@@ -1447,16 +1372,23 @@ class BASE_Transformer_UNet(ResNet_UNet):
         x = rearrange(x, 'b (h w) c -> b c h w', h=h)
         return x
 
-    def _forward_trans_module(self, x1, x2, layer):
+    def _forward_trans_module(self, x1, x2, x3, layer):
+        
         x1 = self.conv_squeeze_layers[layer](x1)
         x2 = self.conv_squeeze_layers[layer](x2)
+        x3 = self.conv_squeeze_layers[layer](x3)
         token1 = self._forward_semantic_tokens(x1, layer)
         token2 = self._forward_semantic_tokens(x2, layer)
+        
+        
+        token3 = self._forward_semantic_tokens(x3, layer)
+        
         self.tokens_ = torch.cat([token1, token2], dim=1)
         self.tokens = self._forward_transformer(self.tokens_, layer)
         token1, token2 = self.tokens.chunk(2, dim=1)
         x1 = self._forward_transformer_decoder(x1, token1, layer)
         x2 = self._forward_transformer_decoder(x2, token2, layer)
+        x3 = self._forward_transformer_decoder(x3, token3, layer)
         # return torch.abs(x1 - x2)
 
         # V1, V2
@@ -1468,185 +1400,92 @@ class BASE_Transformer_UNet(ResNet_UNet):
         diff_token = torch.abs(token2 - token1)
         diff_x = self.conv_decode_layers[layer](torch.cat([x1,x2], axis=1))
         x = self._forward_transformer_decoder(diff_x, diff_token, layer)
-        return x
-
-    def _forward_trans_module_diff1(self, x1, x2, x3, layer):
-        x1 = self.conv_squeeze_layers[layer](x1)
-        x2 = self.conv_squeeze_layers[layer](x2)
-        token1 = self._forward_semantic_tokens(x1, layer)
-        token2 = self._forward_semantic_tokens(x2, layer)
-        
-        print("Attribute SHAPE", x3.shape)
-        x3 = self.conv_squeeze_layers[layer](x3)
-        token3 = self.vits[layer - 1](x3)
-        
-        self.tokens_ = torch.cat([token1, token2], dim=1)
-        self.tokens = self._forward_transformer(self.tokens_, layer)
-        token1, token2 = self.tokens.chunk(2, dim=1)
-        x1 = self._forward_transformer_decoder(x1, token1, layer)
-        x2 = self._forward_transformer_decoder(x2, token2, layer)
-
-        diff_token = torch.abs(token2 - token1)
-        diff_x = self.conv_decode_layers[layer](torch.cat([x1,x2], axis=1))
-        x = self._forward_transformer_decoder(diff_x, diff_token, layer)
-        token3 = token3.unsqueeze(dim=1).unsqueeze(dim=1)
-        x = torch.cat([x, token3])
-        return x
-
-    def _forward_trans_module_diff2(self, x1, x2, layer):
-        x1 = self.conv_squeeze_layers[layer](x1)
-        x2 = self.conv_squeeze_layers[layer](x2)
-        token1 = self._forward_semantic_tokens(x1, layer)
-        token2 = self._forward_semantic_tokens(x2, layer)
-
-        self.tokens_ = torch.cat([token1, token2], dim=1)
-        self.tokens = self._forward_transformer(self.tokens_, layer)
-        token1, token2 = self.tokens.chunk(2, dim=1)
-        x1 = self._forward_transformer_decoder(x1, token1, layer)
-        x2 = self._forward_transformer_decoder(x2, token2, layer)
-
-        diff_token = torch.abs(token2 - token1)
-        diff_x = self.conv_decode_layers[layer](torch.cat([x1,x2], axis=1))
-        x = self._forward_transformer_decoder(diff_x, diff_token, layer)
+        #print(x.shape, token3.shape)
+        x = torch.cat([x, x3], dim=1)
         return x
     
-    def _forward_trans_module_diff3(self, x1, x2, x3_static, x3_dynamic, layer):
+    def _forward_trans_module_old(self, x1, x2, layer):
+        
         x1 = self.conv_squeeze_layers[layer](x1)
         x2 = self.conv_squeeze_layers[layer](x2)
+
         token1 = self._forward_semantic_tokens(x1, layer)
         token2 = self._forward_semantic_tokens(x2, layer)
         
-        x3_static = self.conv_squeeze_layers[layer](x3_static)
-        x3_dynamic = self.conv_squeeze_layers[layer](x3_dynamic)
-        token3_static = self.vits[layer - 1](x3_static)
-        token3_dynamic = self.vits[layer - 1](x3_dynamic)
+        
+
         
         self.tokens_ = torch.cat([token1, token2], dim=1)
         self.tokens = self._forward_transformer(self.tokens_, layer)
         token1, token2 = self.tokens.chunk(2, dim=1)
         x1 = self._forward_transformer_decoder(x1, token1, layer)
         x2 = self._forward_transformer_decoder(x2, token2, layer)
-        
-        token3_static = token3_static.unsqueeze(dim=0)
-        token3_dynamic = token3_dynamic.unsqueeze(dim=0)
-        token3_static = self._forward_transformer(token3_static, layer)
-        token3_dynamic = self._forward_transformer(token3_dynamic, layer)
-        x3_static = self._forward_transformer_decoder(x3_static, token3_static, layer)
-        x3_dynamic = self._forward_transformer_decoder(x3_dynamic, token3_dynamic, layer)
 
-        attr_diff_token = token3_dynamic - token3_static
-        attr_diff = self.conv_decode_layers[layer](torch.cat([x3_static, x3_dynamic], axis=1))
-        attr = self._forward_transformer_decoder(attr_diff, attr_diff_token, layer)
+        # return torch.abs(x1 - x2)
 
+        # V1, V2
+        # x1 = self._forward_transformer_decoder(x1, token2, layer)
+        # x2 = self._forward_transformer_decoder(x2, token1, layer)
+        # return torch.add(x1, x2)
+
+        # V3
         diff_token = torch.abs(token2 - token1)
         diff_x = self.conv_decode_layers[layer](torch.cat([x1,x2], axis=1))
         x = self._forward_transformer_decoder(diff_x, diff_token, layer)
-        
-        return x, attr
-    
-    def forward(self, x1, x2, x3=None, diff_block=0):
-        if diff_block == 0:
-            # forward backbone resnet
-            a_128, a_64, a_32, a_16 = self.forward_single(x1)
-            b_128, b_64, b_32, b_16 = self.forward_single(x2)
-        elif diff_block == 1:
-            x3 = x3.squeeze(dim=2)
-            
-            a_128, a_64, a_32, a_16 = self.forward_single(x1, num_channels=3)
-            b_128, b_64, b_32, b_16 = self.forward_single(x2, num_channels=3)
-            c_128, c_64, c_32, c_16 = self.forward_single(x3, num_channels=19)
-        elif diff_block == 2:
-            a_128, a_64, a_32, a_16 = self.forward_single(x1, num_channels=8)
-            b_128, b_64, b_32, b_16 = self.forward_single(x2, num_channels=17)
-        elif diff_block == 3:
-            x3 = x3.squeeze(dim=2)
-            
-            x3_static = x3[:, :5, :, :]
-            x3_dynamic = x3[:, 5:, :, :]
-            
-            a_128, a_64, a_32, a_16 = self.forward_single(x1, num_channels=3)
-            b_128, b_64, b_32, b_16 = self.forward_single(x2, num_channels=3)
-            cs_128, cs_64, cs_32, cs_16 = self.forward_single(x3_static, num_channels=5)
-            cd_128, cd_64, cd_32, cd_16 = self.forward_single(x3_dynamic, num_channels=14)
 
+        return x
+
+
+    def forward(self, x1, x2, x3):
+        x3 = x3.squeeze(2).to(dtype=torch.float32)
+        # forward backbone resnet
+        #print("img1 shape", x1.shape)
+        #print("img2 shape", x2.shape)
+        #print("meta shape", x3.shape)
+        a_128, a_64, a_32, a_16 = self.forward_single(x1)
+        b_128, b_64, b_32, b_16 = self.forward_single(x2)
+        c_128, c_64, c_32, c_16 = self.meta_res(x3)
+        #print("Cooked up resnet works")
         #  level 5 in=256x16x16 out=32x16x16
-        x1, x2 = a_16, b_16
-        if diff_block == 1:
-            x3 = c_16
-        elif diff_block == 3:
-            x3_static = cs_16
-            x3_dynamic = cd_16
-
-        if self.diff_block == 0 or self.diff_block == 2:
-            out_5 = self.forward_trans_module(x1, x2, layer=3)
-        elif self.diff_block == 1:
-            out_5 = self.forward_trans_module(x1, x2, x3, layer=3)
-        elif self.diff_block == 3:
-            out_5, attr_5 = self.forward_trans_module(x1, x2, x3_static, x3_dynamic, layer=3)
-            attr_5 = self.upsamplex2(attr_5)
-            
+        
+        x1, x2, x3 = a_16, b_16, c_16
+        #print("After RESNET: ")
+        #print("img1 shape", x1.shape)
+        #print("img2 shape", x2.shape)
+        #print("meta shape", x3.shape)
+        out_5 = self._forward_trans_module(x1, x2, x3, layer=3)
         out_5 = self.upsamplex2(out_5)
-        
+        #print(f"Layer 5 Out: {out_5.shape}")
+
         # level 4: in=128x32x32 out=32x32x32
-        x1, x2 = a_32, b_32
-        if diff_block == 1:
-            x3 = c_32
-        elif diff_block == 3:
-            x3_static = cs_32
-            x3_dynamic = cd_32
-
-        if self.diff_block == 0 or self.diff_block == 2:
-            out_4 = self.forward_trans_module(x1, x2, layer=2)
-        elif self.diff_block == 1:
-            out_4 = self.forward_trans_module(x1, x2, x3, layer=2)
-        elif self.diff_block == 3:
-            out_4, attr_4 = self.forward_trans_module(x1, x2, x3_static, x3_dynamic, layer=2)
-
-        #if attr_4 is not None:
-        if self.diff_block == 3:
-            out_4 = out_4 + attr_4 + out_5 + attr_5
-        else:
-            out_4 = out_4 + out_5
-            
+        x1, x2, x3 = a_32, b_32, c_32
+        #print("Layer 4 Start")
+        out_4 = self._forward_trans_module(x1, x2, x3, layer=2)
+        #print("Diff Block")
+        #print(out_4.shape, out_5.shape)
+        out_4 = out_4 + out_5
         out_4 = self.upsamplex2(out_4)
+        #print("Upsample: ", out_4.shape)
         out_4 = self.conv_layer4(out_4)
-        
-        if diff_block == 3:
-            attr_4 = self.upsamplex2(attr_4)
-            attr_4 = self.conv_layer4(attr_4)
-        
-        # level 3: in=64x64x64 out=32x64x64
-        x1, x2 = a_64, b_64
-        if diff_block == 1:
-            x3 = c_64
-        elif diff_block == 3:
-            x3_static = cs_64
-            x3_dynamic = cd_64
+        #print(f"Layer 4 Out: {out_4.shape}")
 
-        if self.diff_block == 0 or self.diff_block == 2:
-            out_3 = self.forward_trans_module(x1, x2, layer=1)
-        elif self.diff_block == 1:
-            out_3 = self.forward_trans_module(x1, x2, x3, layer=1)
-        elif self.diff_block == 3:
-            out_3, attr_3 = self.forward_trans_module(x1, x2, x3_static, x3_dynamic, layer=1)
-
-        #if attr_3 is not None:
-        if self.diff_block == 3:
-            out_3 = out_3 + attr_3 + out_4 + attr_4
-        else:
-            out_3 = out_3 + out_4
-
+        # level 3: in=64x64x64 out=32x64x64 
+        x1, x2, x3 = a_64, b_64, c_64
+        #print("Layer 3 Start")
+        out_3 = self._forward_trans_module(x1, x2, x3, layer=1)
+        out_3 = out_3 + out_4
+        #print(f"After sum: {out_3.shape}")
+        # out_3 = self.conv_layer3(torch.cat([out_3, out_4], axis=1))
         out_3 = self.upsamplex2(out_3)
         out_3 = self.conv_layer3(out_3)
-        
-        if diff_block == 3:
-            attr_3 = self.upsamplex2(attr_3)
-            attr_3 = self.conv_layer3(attr_3)
-        
-        # level 2: in=64x128x128
-        out_2 = self.conv_layer2_0(torch.cat([a_128, b_128], 1))
-        out_2 = out_2 + out_3
 
+
+        #print(f"Level 2 IN: {torch.cat([a_128, b_128], 1).shape}")
+        # level 2: in=64x128x128
+        out_2 = self.conv_layer2_0(torch.cat([a_128, b_128, c_128], 1))
+        #print(out_2.shape, out_3.shape)
+        out_2 = out_2 + out_3
+        # out_2 = self.conv_layer2(torch.cat([out_2, out_3], axis=1))
         out_2 = self.upsamplex2(out_2)
         out_2 = self.conv_layer2(out_2)
 

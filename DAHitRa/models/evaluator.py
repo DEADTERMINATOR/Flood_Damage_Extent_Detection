@@ -32,9 +32,6 @@ class CDEvaluator():
         print(self.device)
         self.model_str = args.net_G
 
-        # Which difference block style to use
-        self.diff_block = args.diff_block
-        
         # define some other vars to record the training states
         self.running_metric = ConfuseMatrixMeter(n_class=self.n_class)
 
@@ -132,11 +129,11 @@ class CDEvaluator():
         #vis = np.concatenate([vis_input, vis_input2, vis_pred, vis_gt], axis=0)
         #vis = np.clip(vis, a_min=0.0, a_max=1.0)
         
-        axes[0].imshow(vis_input[:, :, :3])
+        axes[0].imshow(vis_input)
         axes[0].set_title("Pre-Disaster")
         axes[0].axis('off')
         
-        axes[1].imshow(vis_input2[:, :, :3])
+        axes[1].imshow(vis_input2)
         axes[1].set_title('Post-Disaster')
         axes[1].axis('off')
         
@@ -182,26 +179,12 @@ class CDEvaluator():
         self.batch = batch
         img_in1 = batch['A'].to(self.device)
         img_in2 = batch['B'].to(self.device)
-        self.G_pred = self.net_G(img_in1, img_in2, diff_block=self.diff_block)
-        self.G_final_pred = self.G_pred
-        
-    def _forward_pass_attr(self, batch):
-        self.batch = batch
-        img_in1 = batch['A'].to(self.device)
-        img_in2 = batch['B'].to(self.device)
         attributes = batch['C'].to(self.device)
-        self.G_pred = self.net_G(img_in1, img_in2, attributes, self.diff_block)
-        self.G_final_pred = self.G_pred
         
-    #def _forward_pass(self, batch):
-    #    self.batch = batch
-    #    img_in1 = batch['A'].to(self.device)
-    #    img_in2 = batch['B'].to(self.device)
-        
-    #    if  self.model_str == "changeFormerV6":
-    #        self.G_pred = self.net_G(img_in1, img_in2)[-1]
-    #    else:
-    #        self.G_pred = self.net_G(img_in1, img_in2)
+        if  self.model_str == "changeFormerV6":
+            self.G_pred = self.net_G(img_in1, img_in2)[-1]
+        else:
+            self.G_pred = self.net_G(img_in1, img_in2, attributes)
 
     def eval_models(self,checkpoint_name='best_ckpt.pt'):
 
@@ -217,9 +200,6 @@ class CDEvaluator():
         # Iterate over data.
         for self.batch_id, batch in enumerate(self.dataloader, 0):
             with torch.no_grad():
-                if self.diff_block == 0 or self.diff_block == 2:
-                    self._forward_pass(batch)
-                else:
-                    self._forward_pass_attr(batch)
+                self._forward_pass(batch)
             self._collect_running_batch_states()
         self._collect_epoch_states()
