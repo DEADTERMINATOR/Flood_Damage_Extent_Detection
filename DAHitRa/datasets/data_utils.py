@@ -8,6 +8,8 @@ import torchvision.transforms.functional as TF
 from torchvision import transforms
 import torch
 
+import matplotlib.pyplot as plt
+
 
 def to_tensor_and_norm(imgs, labels):
     # to tensor
@@ -298,13 +300,22 @@ class CDDataAugmentation_Harvey:
         imgs = [TF.normalize(img, mean=[0.5, 0.5, 0.5], std=[0.5, 0.5, 0.5]) for img in imgs]
         attributes = {att_name: TF.normalize(att, mean=[0.5], std=[0.5]) for att_name, att in attributes.items()}
 
+        contains_nan = {att_name: torch.isnan(att).any().item() for att_name, att in attributes.items()}
+        contains_inf = {att_name: torch.isinf(att).any().item() for att_name, att in attributes.items()}
+        for attribute, value in contains_nan.items():
+            if value:
+                print("Contains NaN:", attribute)
+        for attribute, value in contains_inf.items():
+            if value:
+                print("Contains Inf:", attribute)
+
         attr = None
         if diff_block == 1 or diff_block == 3:
             attr = torch.stack([attributes[att_name] for att_name in attributes], dim=0).squeeze(1)  # Stacking along a new dimension
         elif diff_block == 2:
             imgs[0] = torch.cat([imgs[0], attributes["elevation"], attributes["imperviousness"], attributes["hand"], attributes["dist_coast"], attributes["dist_stream"]], dim=0)
             imgs[1] = torch.cat([imgs[1], attributes["rain_824"], attributes["rain_825"], attributes["rain_826"], attributes["rain_827"], attributes["rain_828"], attributes["rain_829"], attributes["rain_830"],
-                                  attributes["stream_elev_824"], attributes["stream_elev_825"], attributes["stream_elev_826"], attributes["stream_elev_827"], attributes["stream_elev_828"], attributes["stream_elev_829"], attributes["stream_elev_830"]], dim=0)
+                                 attributes["stream_elev_824"], attributes["stream_elev_825"], attributes["stream_elev_826"], attributes["stream_elev_827"], attributes["stream_elev_828"], attributes["stream_elev_829"], attributes["stream_elev_830"]], dim=0)
             
         if diff_block == 1 or diff_block == 3:
             return imgs, attr, labels

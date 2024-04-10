@@ -355,7 +355,7 @@ class HarveyDataset(ImageDataset):
         with rasterio.open(os.path.join(self.root_dir, self.split, 'stream_elev/830', self.stream_elev_830_img_name_list[index % self.A_size])) as src:
             stream_elev_830 = src.read(1).astype(np.float32)
             stream_elev_830 = np.expand_dims(stream_elev_830, axis=0)
-            
+           
         return {
             "elevation": elevation,
             "imperviousness": imperviousness,
@@ -377,6 +377,30 @@ class HarveyDataset(ImageDataset):
             "stream_elev_829": stream_elev_829,
             "stream_elev_830": stream_elev_830,
             }
+
+        """
+        return {
+            self.elevation_img_name_list[index % self.A_size]: elevation,
+            self.imperviousness_img_name_list[index % self.A_size]: imperviousness,
+            self.hand_img_name_list[index % self.A_size]: hand,
+            self.dist_coast_img_name_list[index % self.A_size]: dist_coast,
+            self.dist_stream_img_name_list[index % self.A_size]: dist_stream,
+            self.rain_824_img_name_list[index % self.A_size]: rain_824,
+            self.rain_825_img_name_list[index % self.A_size]: rain_825,
+            self.rain_826_img_name_list[index % self.A_size]: rain_826,
+            self.rain_827_img_name_list[index % self.A_size]: rain_827,
+            self.rain_828_img_name_list[index % self.A_size]: rain_828,
+            self.rain_829_img_name_list[index % self.A_size]: rain_829,
+            self.rain_830_img_name_list[index % self.A_size]: rain_830,
+            self.stream_elev_824_img_name_list[index % self.A_size]: stream_elev_824,
+            self.stream_elev_825_img_name_list[index % self.A_size]: stream_elev_825,
+            self.stream_elev_826_img_name_list[index % self.A_size]: stream_elev_826,
+            self.stream_elev_827_img_name_list[index % self.A_size]: stream_elev_827,
+            self.stream_elev_828_img_name_list[index % self.A_size]: stream_elev_828,
+            self.stream_elev_829_img_name_list[index % self.A_size]: stream_elev_829,
+            self.stream_elev_830_img_name_list[index % self.A_size]: stream_elev_830,
+            }
+        """
             
 
     def __init__(self, root_dir, img_size, split='train', is_train=True,

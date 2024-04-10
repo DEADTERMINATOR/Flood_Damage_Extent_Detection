@@ -7,6 +7,8 @@ from rasterio import features
 from rasterio.mask import mask
 from rasterio.windows import Window
 
+from tqdm import tqdm
+
 def align_images(area_images, destination_crs):
     for img in area_images:
         with rasterio.open(img, "r+") as src:
@@ -88,7 +90,7 @@ def cut_images(area_pre_image, area_images, attributes, dataset_dir, file_prefix
                                     geo_.append(geometry)
                 
                             out_img, out_transform = mask(dataset=shaped, shapes=geo_, crop=True)
-                            
+
                             if out_img.shape[0] == 1:
                                 out_img = np.tile(out_img, (3, 1, 1))
                             print(att + " " + str(count) + " " + str(out_img.shape))
@@ -96,6 +98,7 @@ def cut_images(area_pre_image, area_images, attributes, dataset_dir, file_prefix
                             with rasterio.open(dataset_dir+'\\'+att+'\\'+file_prefix+'_'+att+'_'+(str)(count)+'.tif', 'w', driver='GTiff', height=out_img.shape[1], width=out_img.shape[2],
                                                 count=dst.count, dtype=out_img.dtype, transform=out_transform) as dst:
                                 dst.write(out_img)
+
 
 if __name__ == "__main__":
     align = False
@@ -178,63 +181,67 @@ if __name__ == "__main__":
         area1_pde_labels = 'PDE_label\PDE_label_Area1_with_background_aligned.tif'
         area2_pde_labels = 'PDE_label\PDE_label_Area2_with_background_aligned.tif'
     
-        area1_elevation = 'meta_attributes\elevation\elevation_Area1_aligned.tif'
-        area2_elevation = 'meta_attributes\elevation\elevation_Area2_aligned.tif'
+        area1_elevation = 'meta_attributes\elevation\elevation_Area1_aligned_NoDataAveraged.tif'
+        area2_elevation = 'meta_attributes\elevation\elevation_Area2_aligned_NoDataAveraged.tif'
     
-        area1_hand = r'meta_attributes\Height Above Nearest Drainage (HAND)\rem_zeroed_masked_healed_Area1_aligned_nodatachanged.tif'
-        area2_hand = r'meta_attributes\Height Above Nearest Drainage (HAND)\rem_zeroed_masked_healed_Area2_aligned.tif'
+        area1_hand = r'meta_attributes\Height Above Nearest Drainage (HAND)\rem_zeroed_masked_healed_Area1_aligned_NoDataAveraged.tif'
+        area2_hand = r'meta_attributes\Height Above Nearest Drainage (HAND)\rem_zeroed_masked_healed_Area2_aligned_NoDataAveraged.tif'
     
-        area1_imperviousness = r'meta_attributes\impervious\nlcd_2016_impervious_l48_Area1_aligned.tif'
-        area2_imperviousness = r'meta_attributes\impervious\nlcd_2016_impervious_l48_Area2_aligned.tif'
+        area1_imperviousness = r'meta_attributes\impervious\nlcd_2016_impervious_l48_Area1_aligned_NoDataAveraged.tif'
+        area2_imperviousness = r'meta_attributes\impervious\nlcd_2016_impervious_l48_Area2_aligned_NoDataAveraged.tif'
     
-        area1_rain_824 = r'meta_attributes\rain\rain_2017-08-24_Area1_aligned.tif'
-        area1_rain_825 = r'meta_attributes\rain\rain_2017-08-25_Area1_aligned_nodatachanged.tif'
-        area1_rain_826 = r'meta_attributes\rain\rain_2017-08-26_Area1_aligned_nodatachanged.tif'
-        area1_rain_827 = r'meta_attributes\rain\rain_2017-08-27_Area1_aligned_nodatachanged.tif'
-        area1_rain_828 = r'meta_attributes\rain\rain_2017-08-28_Area1_aligned_nodatachanged.tif'
-        area1_rain_829 = r'meta_attributes\rain\rain_2017-08-29_Area1_aligned_nodatachanged.tif'
-        area1_rain_830 = r'meta_attributes\rain\rain_2017-08-30_Area1_aligned.tif'
+        area1_rain_824 = r'meta_attributes\rain\rain_2017-08-24_Area1_aligned_NoDataAveraged.tif'
+        area1_rain_825 = r'meta_attributes\rain\rain_2017-08-25_Area1_aligned_NoDataAveraged.tif'
+        area1_rain_826 = r'meta_attributes\rain\rain_2017-08-26_Area1_aligned_NoDataAveraged.tif'
+        area1_rain_827 = r'meta_attributes\rain\rain_2017-08-27_Area1_aligned_NoDataAveraged.tif'
+        area1_rain_828 = r'meta_attributes\rain\rain_2017-08-28_Area1_aligned_NoDataAveraged.tif'
+        area1_rain_829 = r'meta_attributes\rain\rain_2017-08-29_Area1_aligned_NoDataAveraged.tif'
+        area1_rain_830 = r'meta_attributes\rain\rain_2017-08-30_Area1_aligned_NoDataAveraged.tif'
 
-        area2_rain_824 = r'meta_attributes\rain\rain_2017-08-24_Area2_aligned_nodatachanged.tif'
-        area2_rain_825 = r'meta_attributes\rain\rain_2017-08-25_Area2_aligned_nodatachanged.tif'
-        area2_rain_826 = r'meta_attributes\rain\rain_2017-08-26_Area2_aligned_nodatachanged.tif'
-        area2_rain_827 = r'meta_attributes\rain\rain_2017-08-27_Area2_aligned_nodatachanged.tif'
-        area2_rain_828 = r'meta_attributes\rain\rain_2017-08-28_Area2_aligned_nodatachanged.tif'
-        area2_rain_829 = r'meta_attributes\rain\rain_2017-08-29_Area2_aligned_nodatachanged.tif'
-        area2_rain_830 = r'meta_attributes\rain\rain_2017-08-30_Area2_aligned.tif'
+        area2_rain_824 = r'meta_attributes\rain\rain_2017-08-24_Area2_aligned_NoDataAveraged.tif'
+        area2_rain_825 = r'meta_attributes\rain\rain_2017-08-25_Area2_aligned_NoDataAveraged.tif'
+        area2_rain_826 = r'meta_attributes\rain\rain_2017-08-26_Area2_aligned_NoDataAveraged.tif'
+        area2_rain_827 = r'meta_attributes\rain\rain_2017-08-27_Area2_aligned_NoDataAveraged.tif'
+        area2_rain_828 = r'meta_attributes\rain\rain_2017-08-28_Area2_aligned_NoDataAveraged.tif'
+        area2_rain_829 = r'meta_attributes\rain\rain_2017-08-29_Area2_aligned_NoDataAveraged.tif'
+        area2_rain_830 = r'meta_attributes\rain\rain_2017-08-30_Area2_aligned_NoDataAveraged.tif'
         
-        area1_stream_elevation_824 = 'meta_attributes\strm_elev\strm_elev_2017-08-24_Area1_aligned_nodatachanged.tif'
-        area1_stream_elevation_825 = 'meta_attributes\strm_elev\strm_elev_2017-08-25_Area1_aligned_nodatachanged.tif'
-        area1_stream_elevation_826 = 'meta_attributes\strm_elev\strm_elev_2017-08-26_Area1_aligned_nodatachanged.tif'
-        area1_stream_elevation_827 = 'meta_attributes\strm_elev\strm_elev_2017-08-27_Area1_aligned_nodatachanged.tif'
-        area1_stream_elevation_828 = 'meta_attributes\strm_elev\strm_elev_2017-08-28_Area1_aligned_nodatachanged.tif'
-        area1_stream_elevation_829 = 'meta_attributes\strm_elev\strm_elev_2017-08-29_Area1_aligned_nodatachanged.tif'
-        area1_stream_elevation_830 = 'meta_attributes\strm_elev\strm_elev_2017-08-30_Area1_aligned_nodatachanged.tif'
+        area1_stream_elevation_824 = 'meta_attributes\strm_elev\strm_elev_2017-08-24_Area1_aligned_NoDataAveraged.tif'
+        area1_stream_elevation_825 = 'meta_attributes\strm_elev\strm_elev_2017-08-25_Area1_aligned_NoDataAveraged.tif'
+        area1_stream_elevation_826 = 'meta_attributes\strm_elev\strm_elev_2017-08-26_Area1_aligned_NoDataAveraged.tif'
+        area1_stream_elevation_827 = 'meta_attributes\strm_elev\strm_elev_2017-08-27_Area1_aligned_NoDataAveraged.tif'
+        area1_stream_elevation_828 = 'meta_attributes\strm_elev\strm_elev_2017-08-28_Area1_aligned_NoDataAveraged.tif'
+        area1_stream_elevation_829 = 'meta_attributes\strm_elev\strm_elev_2017-08-29_Area1_aligned_NoDataAveraged.tif'
+        area1_stream_elevation_830 = 'meta_attributes\strm_elev\strm_elev_2017-08-30_Area1_aligned_NoDataAveraged.tif'
 
-        area2_stream_elevation_824 = 'meta_attributes\strm_elev\strm_elev_2017-08-24_Area2_aligned_nodatachanged.tif'
-        area2_stream_elevation_825 = 'meta_attributes\strm_elev\strm_elev_2017-08-25_Area2_aligned_nodatachanged.tif'
-        area2_stream_elevation_826 = 'meta_attributes\strm_elev\strm_elev_2017-08-26_Area2_aligned_nodatachanged.tif'
-        area2_stream_elevation_827 = 'meta_attributes\strm_elev\strm_elev_2017-08-27_Area2_aligned_nodatachanged.tif'
-        area2_stream_elevation_828 = 'meta_attributes\strm_elev\strm_elev_2017-08-28_Area2_aligned_nodatachanged.tif'
-        area2_stream_elevation_829 = 'meta_attributes\strm_elev\strm_elev_2017-08-29_Area2_aligned_nodatachanged.tif'
-        area2_stream_elevation_830 = 'meta_attributes\strm_elev\strm_elev_2017-08-30_Area2_aligned_nodatachanged.tif'
+        area2_stream_elevation_824 = 'meta_attributes\strm_elev\strm_elev_2017-08-24_Area2_aligned_NoDataAveraged.tif'
+        area2_stream_elevation_825 = 'meta_attributes\strm_elev\strm_elev_2017-08-25_Area2_aligned_NoDataAveraged.tif'
+        area2_stream_elevation_826 = 'meta_attributes\strm_elev\strm_elev_2017-08-26_Area2_aligned_NoDataAveraged.tif'
+        area2_stream_elevation_827 = 'meta_attributes\strm_elev\strm_elev_2017-08-27_Area2_aligned_NoDataAveraged.tif'
+        area2_stream_elevation_828 = 'meta_attributes\strm_elev\strm_elev_2017-08-28_Area2_aligned_NoDataAveraged.tif'
+        area2_stream_elevation_829 = 'meta_attributes\strm_elev\strm_elev_2017-08-29_Area2_aligned_NoDataAveraged.tif'
+        area2_stream_elevation_830 = 'meta_attributes\strm_elev\strm_elev_2017-08-30_Area2_aligned_NoDataAveraged.tif'
         
-        area1_distance_to_coast = 'meta_attributes\dis_coa\distance_to_coast_Area1_aligned.tif'
-        area2_distance_to_coast = 'meta_attributes\dis_coa\distance_to_coast_Area2_aligned.tif'
+        area1_distance_to_coast = 'meta_attributes\dis_coa\distance_to_coast_Area1_aligned_NoDataAveraged.tif'
+        area2_distance_to_coast = 'meta_attributes\dis_coa\distance_to_coast_Area2_aligned_NoDataAveraged.tif'
         
-        area1_distance_to_stream = 'meta_attributes\dis_stream\distance_to_stream_Area1_aligned.tif'
-        area2_distance_to_stream = 'meta_attributes\dis_stream\distance_to_stream_Area2_aligned.tif'
+        area1_distance_to_stream = 'meta_attributes\dis_stream\distance_to_stream_Area1_aligned_NoDataAveraged.tif'
+        area2_distance_to_stream = 'meta_attributes\dis_stream\distance_to_stream_Area2_aligned_NoDataAveraged.tif'
         
         # Refresh area_images with the new file paths.
-        area_images = [area1_hand, area1_rain_824, area1_rain_825, area1_rain_826, area1_rain_827, area1_rain_828, area1_rain_829, area1_rain_830,
+        area_images = [area1_post_image, area1_pde_labels, area1_elevation, area1_hand, area1_imperviousness, area1_distance_to_coast, area1_distance_to_stream,
+                       area1_rain_824, area1_rain_825, area1_rain_826, area1_rain_827, area1_rain_828, area1_rain_829, area1_rain_830,
                        area1_stream_elevation_824, area1_stream_elevation_825, area1_stream_elevation_826, area1_stream_elevation_827, area1_stream_elevation_828, area1_stream_elevation_829, area1_stream_elevation_830,
-                       area2_hand, area2_rain_824, area2_rain_825, area2_rain_826, area2_rain_827, area2_rain_828, area2_rain_829, area2_rain_830,
+                       area2_post_image, area2_pde_labels, area2_elevation, area2_hand, area2_imperviousness, area2_distance_to_coast, area2_distance_to_stream,
+                       area2_rain_824, area2_rain_825, area2_rain_826, area2_rain_827, area2_rain_828, area2_rain_829, area2_rain_830,
                        area2_stream_elevation_824, area2_stream_elevation_825, area2_stream_elevation_826, area2_stream_elevation_827, area2_stream_elevation_828, area2_stream_elevation_829, area2_stream_elevation_830]
         
-        area1_images = area_images[0:15]
-        area2_images = area_images[15:29]
+        area1_images = area_images[0:21]
+        area2_images = area_images[21:42]
     
-        attributes = ['hand', 'rain_824', 'rain_825', 'rain_826', 'rain_827', 'rain_828', 'rain_829', 'rain_830', 'stream_elev_824', 'stream_elev_825', 'stream_elev_826', 'stream_elev_827', 'stream_elev_828', 'stream_elev_829', 'stream_elev_830']
+        attributes = ['post_img', 'PDE_labels', 'elevation', 'hand', 'imperviousness', 'distance_to_coast', 'distance_to_stream',
+                      'rain_824', 'rain_825', 'rain_826', 'rain_827', 'rain_828', 'rain_829', 'rain_830',
+                      'stream_elev_824', 'stream_elev_825', 'stream_elev_826', 'stream_elev_827', 'stream_elev_828', 'stream_elev_829', 'stream_elev_830']
     
         output_dir = 'dataset\\'
     

@@ -141,24 +141,24 @@ removals = [0, 1, 2, 3, 4, 5, 6, 7, 8, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 2
 #                       rain_824_path, rain_825_path, rain_826_path, rain_827_path, rain_828_path, rain_829_path, rain_830_path,
 #                       stream_elev_824_path, stream_elev_825_path, stream_elev_826_path, stream_elev_827_path, stream_elev_828_path, stream_elev_829_path, stream_elev_830_path]
 
-move_directories = [pre_img_path, post_img_path, pde_labels_path, pre_msk_path, elevation_path, hand_path, imperviousness_path, distance_to_coast_path, distance_to_stream_path,
+move_directories = [pre_img_path, post_img_path, pde_labels_path, elevation_path, hand_path, imperviousness_path, distance_to_coast_path, distance_to_stream_path,
                     rain_824_path, rain_825_path, rain_826_path, rain_827_path, rain_828_path, rain_829_path, rain_830_path,
                     stream_elev_824_path, stream_elev_825_path, stream_elev_826_path, stream_elev_827_path, stream_elev_828_path, stream_elev_829_path, stream_elev_830_path]
 
-train_directories = [pre_img_train_path, post_img_train_path, pde_labels_train_path, pre_msk_train_path, elevation_train_path, hand_train_path, imperviousness_train_path, distance_to_coast_train_path, distance_to_stream_train_path,
+train_directories = [pre_img_train_path, post_img_train_path, pde_labels_train_path, elevation_train_path, hand_train_path, imperviousness_train_path, distance_to_coast_train_path, distance_to_stream_train_path,
                      rain_824_train_path, rain_825_train_path, rain_826_train_path, rain_827_train_path, rain_828_train_path, rain_829_train_path, rain_830_train_path,
                      stream_elev_824_train_path, stream_elev_825_train_path, stream_elev_826_train_path, stream_elev_827_train_path, stream_elev_828_train_path, stream_elev_829_train_path, stream_elev_830_train_path]
 
-test_directories = [pre_img_test_path, post_img_test_path, pde_labels_test_path, pre_msk_test_path, elevation_test_path, hand_test_path, imperviousness_test_path, distance_to_coast_test_path, distance_to_stream_test_path,
+test_directories = [pre_img_test_path, post_img_test_path, pde_labels_test_path, elevation_test_path, hand_test_path, imperviousness_test_path, distance_to_coast_test_path, distance_to_stream_test_path,
                     rain_824_test_path, rain_825_test_path, rain_826_test_path, rain_827_test_path, rain_828_test_path, rain_829_test_path, rain_830_test_path,
                     stream_elev_824_test_path, stream_elev_825_test_path, stream_elev_826_test_path, stream_elev_827_test_path, stream_elev_828_test_path, stream_elev_829_test_path, stream_elev_830_test_path]
 
-val_directories = [pre_img_val_path, post_img_val_path, pde_labels_val_path, pre_msk_val_path, elevation_val_path, hand_val_path, imperviousness_val_path, distance_to_coast_val_path, distance_to_stream_val_path,
+val_directories = [pre_img_val_path, post_img_val_path, pde_labels_val_path, elevation_val_path, hand_val_path, imperviousness_val_path, distance_to_coast_val_path, distance_to_stream_val_path,
                    rain_824_val_path, rain_825_val_path, rain_826_val_path, rain_827_val_path, rain_828_val_path, rain_829_val_path, rain_830_val_path,
                    stream_elev_824_val_path, stream_elev_825_val_path, stream_elev_826_val_path, stream_elev_827_val_path, stream_elev_828_val_path, stream_elev_829_val_path, stream_elev_830_val_path]
 
 delete_files = True
-generate_new_test_indices = False
+generate_new_test_indices = True
 move_files_to_train_test = True
 
 with open('log.txt', 'w') as log:
