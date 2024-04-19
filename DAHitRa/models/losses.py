@@ -300,7 +300,18 @@ def multi_cross_entropy(input, target, weight=None, reduction='mean',ignore_inde
     #weight_ = torch.Tensor([1, 5, 100, 90, 100]).cuda()
 
     # Weights for Harvey dataset.
-    weight_ = torch.Tensor([5, 100, 100, 100, 1]).cuda()
+    weight_ = torch.Tensor([5, 25, 20, 30, 1]).cuda()
+    #total_images = 321
+
+    # Class counts
+    #class_counts = torch.Tensor([294, 127, 17, 5, 321]).cuda()
+
+    # Calculate weights inversely proportional to class frequencies
+    #weight_ = total_images / class_counts
+
+    # Normalize weights
+    #weight_ /= weight_.min()  
+    #print(weight_)
     # print("pred: ", input.shape, "target: ", target.shape)
  
     return F.cross_entropy(input=input, target=target, weight=weight_,
@@ -322,8 +333,13 @@ def ce_dice(input, target, weight=None, ignore_index=255, reduction='mean'):
     if input.shape[-1] != target.shape[-1]:
         input = F.interpolate(input, size=target.shape[1:], mode='bilinear',align_corners=True)
     
-    weight_ = torch.Tensor([0.2, 0.8]).cuda()
-    ce  = torch.nn.CrossEntropyLoss(weight=weight,
+    if weight is not None:
+        weight_ = weight
+    else:
+        #weight_ = torch.Tensor([0.2, 0.8]).cuda()
+        weight_ = torch.Tensor([5, 25, 20, 30, 1]).cuda()    
+        
+    ce  = torch.nn.CrossEntropyLoss(weight=weight_,
                            ignore_index=ignore_index, reduction=reduction)
     celoss = ce(input,target)    
     dice = smp_losses.DiceLoss(mode='binary')

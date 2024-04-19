@@ -158,8 +158,8 @@ val_directories = [pre_img_val_path, post_img_val_path, pde_labels_val_path, ele
                    stream_elev_824_val_path, stream_elev_825_val_path, stream_elev_826_val_path, stream_elev_827_val_path, stream_elev_828_val_path, stream_elev_829_val_path, stream_elev_830_val_path]
 
 delete_files = True
-generate_new_test_indices = True
-move_files_to_train_test = True
+generate_new_test_indices = False
+move_files_to_train_test = False
 
 with open('log.txt', 'w') as log:
     if (delete_files):

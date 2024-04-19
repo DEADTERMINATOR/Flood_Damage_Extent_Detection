@@ -8,6 +8,7 @@ import numpy as np
 import cv2
 import rasterio
 
+import torch
 from torch.utils import data
 
 from datasets.data_utils import CDDataAugmentation, CDDataAugmentation_Harvey
@@ -300,59 +301,59 @@ class HarveyDataset(ImageDataset):
             dist_stream = src.read(1)
             dist_stream = np.expand_dims(dist_stream, axis=0)
             
-        with rasterio.open(os.path.join(self.root_dir, self.split, 'rain/824', self.rain_824_img_name_list[index % self.A_size])) as src:
+        with rasterio.open(os.path.join(self.root_dir, self.split, 'rain/rain_824', self.rain_824_img_name_list[index % self.A_size])) as src:
             rain_824 = src.read(1).astype(np.float32)
             rain_824 = np.expand_dims(rain_824, axis=0)
             
-        with rasterio.open(os.path.join(self.root_dir, self.split, 'rain/825', self.rain_825_img_name_list[index % self.A_size])) as src:
+        with rasterio.open(os.path.join(self.root_dir, self.split, 'rain/rain_825', self.rain_825_img_name_list[index % self.A_size])) as src:
             rain_825 = src.read(1).astype(np.float32)
             rain_825 = np.expand_dims(rain_825, axis=0)
             
-        with rasterio.open(os.path.join(self.root_dir, self.split, 'rain/826', self.rain_826_img_name_list[index % self.A_size])) as src:
+        with rasterio.open(os.path.join(self.root_dir, self.split, 'rain/rain_826', self.rain_826_img_name_list[index % self.A_size])) as src:
             rain_826 = src.read(1).astype(np.float32)
             rain_826 = np.expand_dims(rain_826, axis=0)
             
-        with rasterio.open(os.path.join(self.root_dir, self.split, 'rain/827', self.rain_827_img_name_list[index % self.A_size])) as src:
+        with rasterio.open(os.path.join(self.root_dir, self.split, 'rain/rain_827', self.rain_827_img_name_list[index % self.A_size])) as src:
             rain_827 = src.read(1).astype(np.float32)
             rain_827 = np.expand_dims(rain_827, axis=0)
             
-        with rasterio.open(os.path.join(self.root_dir, self.split, 'rain/828', self.rain_828_img_name_list[index % self.A_size])) as src:
+        with rasterio.open(os.path.join(self.root_dir, self.split, 'rain/rain_828', self.rain_828_img_name_list[index % self.A_size])) as src:
             rain_828 = src.read(1).astype(np.float32)
             rain_828 = np.expand_dims(rain_828, axis=0)
             
-        with rasterio.open(os.path.join(self.root_dir, self.split, 'rain/829', self.rain_829_img_name_list[index % self.A_size])) as src:
+        with rasterio.open(os.path.join(self.root_dir, self.split, 'rain/rain_829', self.rain_829_img_name_list[index % self.A_size])) as src:
             rain_829 = src.read(1).astype(np.float32)
             rain_829 = np.expand_dims(rain_829, axis=0)
             
-        with rasterio.open(os.path.join(self.root_dir, self.split, 'rain/830', self.rain_830_img_name_list[index % self.A_size])) as src:
+        with rasterio.open(os.path.join(self.root_dir, self.split, 'rain/rain_830', self.rain_830_img_name_list[index % self.A_size])) as src:
             rain_830 = src.read(1).astype(np.float32)
             rain_830 = np.expand_dims(rain_830, axis=0)
             
-        with rasterio.open(os.path.join(self.root_dir, self.split, 'stream_elev/824', self.stream_elev_824_img_name_list[index % self.A_size])) as src:
+        with rasterio.open(os.path.join(self.root_dir, self.split, 'stream_elev/stream_elev_824', self.stream_elev_824_img_name_list[index % self.A_size])) as src:
             stream_elev_824 = src.read(1).astype(np.float32)
             stream_elev_824 = np.expand_dims(stream_elev_824, axis=0)
             
-        with rasterio.open(os.path.join(self.root_dir, self.split, 'stream_elev/825', self.stream_elev_825_img_name_list[index % self.A_size])) as src:
+        with rasterio.open(os.path.join(self.root_dir, self.split, 'stream_elev/stream_elev_825', self.stream_elev_825_img_name_list[index % self.A_size])) as src:
             stream_elev_825 = src.read(1).astype(np.float32)
             stream_elev_825 = np.expand_dims(stream_elev_825, axis=0)
             
-        with rasterio.open(os.path.join(self.root_dir, self.split, 'stream_elev/826', self.stream_elev_826_img_name_list[index % self.A_size])) as src:
+        with rasterio.open(os.path.join(self.root_dir, self.split, 'stream_elev/stream_elev_826', self.stream_elev_826_img_name_list[index % self.A_size])) as src:
             stream_elev_826 = src.read(1).astype(np.float32)
             stream_elev_826 = np.expand_dims(stream_elev_826, axis=0)
             
-        with rasterio.open(os.path.join(self.root_dir, self.split, 'stream_elev/827', self.stream_elev_827_img_name_list[index % self.A_size])) as src:
+        with rasterio.open(os.path.join(self.root_dir, self.split, 'stream_elev/stream_elev_827', self.stream_elev_827_img_name_list[index % self.A_size])) as src:
             stream_elev_827 = src.read(1).astype(np.float32)
             stream_elev_827 = np.expand_dims(stream_elev_827, axis=0)
             
-        with rasterio.open(os.path.join(self.root_dir, self.split, 'stream_elev/828', self.stream_elev_828_img_name_list[index % self.A_size])) as src:
+        with rasterio.open(os.path.join(self.root_dir, self.split, 'stream_elev/stream_elev_828', self.stream_elev_828_img_name_list[index % self.A_size])) as src:
             stream_elev_828 = src.read(1).astype(np.float32)
             stream_elev_828 = np.expand_dims(stream_elev_828, axis=0)
             
-        with rasterio.open(os.path.join(self.root_dir, self.split, 'stream_elev/829', self.stream_elev_829_img_name_list[index % self.A_size])) as src:
+        with rasterio.open(os.path.join(self.root_dir, self.split, 'stream_elev/stream_elev_829', self.stream_elev_829_img_name_list[index % self.A_size])) as src:
             stream_elev_829 = src.read(1).astype(np.float32)
             stream_elev_829 = np.expand_dims(stream_elev_829, axis=0)
             
-        with rasterio.open(os.path.join(self.root_dir, self.split, 'stream_elev/830', self.stream_elev_830_img_name_list[index % self.A_size])) as src:
+        with rasterio.open(os.path.join(self.root_dir, self.split, 'stream_elev/stream_elev_830', self.stream_elev_830_img_name_list[index % self.A_size])) as src:
             stream_elev_830 = src.read(1).astype(np.float32)
             stream_elev_830 = np.expand_dims(stream_elev_830, axis=0)
             
@@ -361,14 +362,16 @@ class HarveyDataset(ImageDataset):
             "imperviousness": imperviousness,
             "hand": hand,
             "dist_coast": dist_coast,
-            "dist_stream": dist_stream,
+            "dist_stream": dist_stream
+            },{
             "rain_824": rain_824,
             "rain_825": rain_825,
             "rain_826": rain_826,
             "rain_827": rain_827,
             "rain_828": rain_828,
             "rain_829": rain_829,
-            "rain_830": rain_830,
+            "rain_830": rain_830
+            },{
             "stream_elev_824": stream_elev_824,
             "stream_elev_825": stream_elev_825,
             "stream_elev_826": stream_elev_826,
@@ -380,11 +383,12 @@ class HarveyDataset(ImageDataset):
             
 
     def __init__(self, root_dir, img_size, split='train', is_train=True,
-                 to_tensor=True, load_meta_attributes_upfront=False):
+                 to_tensor=True, load_meta_attributes_upfront=False, diff_block=0):
         super(HarveyDataset, self).__init__(root_dir, img_size=img_size, split=split, is_train=is_train,
                                         to_tensor=to_tensor)
         self.split = split
         self.load_meta_attributes_upfront = load_meta_attributes_upfront
+        self.diff_block = diff_block
         
         self.label_img_name_list = os.listdir(os.path.join(self.root_dir, split, 'PDE_labels'))
         self.elevation_img_name_list = os.listdir(os.path.join(self.root_dir, split, 'elevation'))
@@ -393,21 +397,21 @@ class HarveyDataset(ImageDataset):
         self.dist_coast_img_name_list = os.listdir(os.path.join(self.root_dir, split, 'distance_to_coast'))
         self.dist_stream_img_name_list = os.listdir(os.path.join(self.root_dir, split, 'distance_to_stream'))
         
-        self.rain_824_img_name_list = os.listdir(os.path.join(self.root_dir, split, 'rain/824'))
-        self.rain_825_img_name_list = os.listdir(os.path.join(self.root_dir, split, 'rain/825'))
-        self.rain_826_img_name_list = os.listdir(os.path.join(self.root_dir, split, 'rain/826'))
-        self.rain_827_img_name_list = os.listdir(os.path.join(self.root_dir, split, 'rain/827'))
-        self.rain_828_img_name_list = os.listdir(os.path.join(self.root_dir, split, 'rain/828'))
-        self.rain_829_img_name_list = os.listdir(os.path.join(self.root_dir, split, 'rain/829'))
-        self.rain_830_img_name_list = os.listdir(os.path.join(self.root_dir, split, 'rain/830'))
+        self.rain_824_img_name_list = os.listdir(os.path.join(self.root_dir, split, 'rain/rain_824'))
+        self.rain_825_img_name_list = os.listdir(os.path.join(self.root_dir, split, 'rain/rain_825'))
+        self.rain_826_img_name_list = os.listdir(os.path.join(self.root_dir, split, 'rain/rain_826'))
+        self.rain_827_img_name_list = os.listdir(os.path.join(self.root_dir, split, 'rain/rain_827'))
+        self.rain_828_img_name_list = os.listdir(os.path.join(self.root_dir, split, 'rain/rain_828'))
+        self.rain_829_img_name_list = os.listdir(os.path.join(self.root_dir, split, 'rain/rain_829'))
+        self.rain_830_img_name_list = os.listdir(os.path.join(self.root_dir, split, 'rain/rain_830'))
         
-        self.stream_elev_824_img_name_list = os.listdir(os.path.join(self.root_dir, split, 'stream_elev/824'))
-        self.stream_elev_825_img_name_list = os.listdir(os.path.join(self.root_dir, split, 'stream_elev/825'))
-        self.stream_elev_826_img_name_list = os.listdir(os.path.join(self.root_dir, split, 'stream_elev/826'))
-        self.stream_elev_827_img_name_list = os.listdir(os.path.join(self.root_dir, split, 'stream_elev/827'))
-        self.stream_elev_828_img_name_list = os.listdir(os.path.join(self.root_dir, split, 'stream_elev/828'))
-        self.stream_elev_829_img_name_list = os.listdir(os.path.join(self.root_dir, split, 'stream_elev/829'))
-        self.stream_elev_830_img_name_list = os.listdir(os.path.join(self.root_dir, split, 'stream_elev/830'))
+        self.stream_elev_824_img_name_list = os.listdir(os.path.join(self.root_dir, split, 'stream_elev/stream_elev_824'))
+        self.stream_elev_825_img_name_list = os.listdir(os.path.join(self.root_dir, split, 'stream_elev/stream_elev_825'))
+        self.stream_elev_826_img_name_list = os.listdir(os.path.join(self.root_dir, split, 'stream_elev/stream_elev_826'))
+        self.stream_elev_827_img_name_list = os.listdir(os.path.join(self.root_dir, split, 'stream_elev/stream_elev_827'))
+        self.stream_elev_828_img_name_list = os.listdir(os.path.join(self.root_dir, split, 'stream_elev/stream_elev_828'))
+        self.stream_elev_829_img_name_list = os.listdir(os.path.join(self.root_dir, split, 'stream_elev/stream_elev_829'))
+        self.stream_elev_830_img_name_list = os.listdir(os.path.join(self.root_dir, split, 'stream_elev/stream_elev_830'))
         
         """
         if (load_meta_attributes_upfront):
@@ -506,9 +510,22 @@ class HarveyDataset(ImageDataset):
             }
         else:
         """
-        attribute_dict = self.load_meta_attributes_by_index(index)
+        attribute_dict, rainfall_dict, stream_elev_dict = self.load_meta_attributes_by_index(index)
+        
+        cumulative_rainfall = np.zeros_like(rainfall_dict['rain_824'])
+        for rain in rainfall_dict.values():
+            cumulative_rainfall += rain
             
-        [img, img_B], attributes, [label] = self.augm.transform(imgs=[img, img_B], labels=[label], attributes=attribute_dict, diff_block=1)
+        maximum_stream_elev = np.zeros_like(stream_elev_dict['stream_elev_824'])
+        for stream_elev in stream_elev_dict.values():
+            maximum_stream_elev = np.maximum(maximum_stream_elev, stream_elev)
             
-        # [img, img_B], [label] = self.augm.transform([img, img_B], [label], to_tensor=self.to_tensor, split=self.split)
-        return {'name': name, 'A': img, 'B': img_B, 'C': attributes, 'L': label}
+        attribute_dict['rain'] = cumulative_rainfall
+        attribute_dict['stream_elev'] = maximum_stream_elev
+            
+        if self.diff_block == 1 or self.diff_block == 3:
+            [img, img_B], attributes, [label] = self.augm.transform(imgs=[img, img_B], labels=[label], attributes=attribute_dict, diff_block=self.diff_block)
+            return {'name': name, 'A': img, 'B': img_B, 'C': attributes, 'L': label}
+        else:
+            [img, img_B], [label] = self.augm.transform(imgs=[img, img_B], labels=[label], attributes=attribute_dict, diff_block=self.diff_block)
+            return {'name': name, 'A': img, 'B': img_B, 'L': label}

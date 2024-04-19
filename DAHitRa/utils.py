@@ -8,7 +8,7 @@ from datasets.CD_dataset import CDDataset, HarveyDataset, xBDataset, xBDatasetMu
 
 
 def get_loader(data_name, img_size=256, batch_size=8, split='test',
-               is_train=False, dataset='CDDataset', patch=None):
+               is_train=False, dataset='CDDataset', patch=None, diff_block=0):
     dataConfig = data_config.DataConfig().get_data_config(data_name)
     root_dir = dataConfig.root_dir
     label_transform = dataConfig.label_transform
@@ -29,7 +29,7 @@ def get_loader(data_name, img_size=256, batch_size=8, split='test',
     elif dataset == 'HarveyDataset':
         data_set = HarveyDataset(root_dir = root_dir, split = split,
                                  img_size = img_size, is_train=is_train,
-                                 load_meta_attributes_upfront=False)
+                                 load_meta_attributes_upfront=False, diff_block=diff_block)
     else:
         raise NotImplementedError(
             'Wrong dataset name %s (choose one from [CDDataset])'
@@ -76,10 +76,10 @@ def get_loaders(args):
     elif args.dataset == 'HarveyDataset':
         training_set = HarveyDataset(root_dir = root_dir, split = split,
                                      img_size = args.img_size, is_train=True,
-                                     load_meta_attributes_upfront=False)
+                                     load_meta_attributes_upfront=False, diff_block=args.diff_block)
         val_set = HarveyDataset(root_dir = root_dir, split = split,
                                 img_size = args.img_size, is_train=False,
-                                load_meta_attributes_upfront=False)
+                                load_meta_attributes_upfront=False, diff_block=args.diff_block)
     else:
         raise NotImplementedError(
             'Wrong dataset name %s (choose one from [CDDataset,])'
